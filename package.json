@@ -1,0 +1,26 @@
+{
+  "name": "renewal-reminder",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "generate-types": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.1.1",
+    "@mmmike/web-push": "^0.1.0",
+    "astro": "^7.0.6",
+    "wrangler": "^4.107.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/node": "^26.1.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,28 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"compatibility_date": "2026-07-05",
+	"compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
+	"name": "renewal-reminder",
+	"main": "./src/worker.ts",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "renewal-reminder-db",
+			"database_id": "ab095a15-9abf-4ad9-b733-18bd7f0c226a"
+		}
+	],
+	"triggers": {
+		"crons": ["0 23 * * *"]
+	},
+	"vars": {
+		"VAPID_SUBJECT": "mailto:wheatandcat@gmail.com",
+		"VAPID_PUBLIC_KEY": "BKJYILK6p3rxkdVh8AVe7nkIDlxwI_VkXjkdTW3SFiP8me-x_PtUoJ4NvfVyXf8O4VTwJ-i2_nW29FMhczorSr0"
+	}
+}
