@@ -1,0 +1,652 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="更新チェックリスト - 精神障害者手帳 更新リマインダー">
+	<main>
+		<aside class="left">
+			<p class="expiry">現在の有効期限：<span id="expiry-label"></span></p>
+
+			<div class="cloud">
+				<p class="cloud-title">次回の更新期間は</p>
+				<p class="cloud-period">
+					<span class="num" id="start-year"></span>年<span class="num" id="start-month"></span>月<span class="unit">から</span>
+				</p>
+				<p class="cloud-period">
+					<span class="num" id="end-year"></span>年<span class="num" id="end-month"></span>月<span class="unit">まで</span>
+				</p>
+			</div>
+
+			<section id="ios-install" class="hidden ios-note">
+				<p>iOSで通知を受け取るには、まずこのページをホーム画面に追加してください。</p>
+				<p>Safariの共有ボタン → 「ホーム画面に追加」を選択後、ホーム画面のアイコンから開き直してください。</p>
+			</section>
+			<section id="ios-update" class="hidden ios-note">
+				<p>iOSのWeb Push対応にはiOS 16.4以降が必要です。iOSをアップデートしてください。</p>
+			</section>
+
+			<div id="remind-area" class="remind hidden">
+				<button class="btn-outline remind-btn" id="remind-btn">リマインドする</button>
+				<p class="remind-note">
+					更新月の<span id="before-months"></span>ヶ月前と更新月に<br />このデバイスへPush通知を送ります
+				</p>
+				<p id="status" class="status"></p>
+				<ul id="schedule-list" class="schedules"></ul>
+			</div>
+
+			<a class="toggle-link" href="/setup">▶ 設定を変更する</a>
+
+			<details class="tips">
+				<summary>Tips</summary>
+				<div class="tip-card">
+					<p>
+						Excel形式で申請書を書きたい方は、東京都福祉局のページ内「書面による通知サービスについて」の項目から<a
+							href="https://www.fukushi.metro.tokyo.lg.jp/documents/d/fukushi/syougaisyatechoshinsei_251219-xlsx-2"
+							target="_blank"
+							rel="noopener">(様式)障害者手帳申請書</a
+						>をDLできます。
+					</p>
+					<a
+						class="tip-link"
+						href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+						target="_blank"
+						rel="noopener">https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+					>
+				</div>
+				<div class="tip-card">
+					<p>
+						更新手続き開始1週間前に書面により通知するサービスがあります。更新申請の受付開始通知希望欄で「有」を選ぶと、更新受付開始の一週間前に郵送で通知と申請書が送られてきます。
+					</p>
+					<a
+						class="tip-link"
+						href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+						target="_blank"
+						rel="noopener">https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+					>
+				</div>
+			</details>
+		</aside>
+
+		<section class="timeline">
+			<div class="year-pill" id="prepare-year"></div>
+
+			<div class="step">
+				<div class="marker"><span class="num" id="prepare-month"></span><span class="unit">月</span></div>
+				<div class="step-body">
+					<h2>更新の準備をはじめる</h2>
+					<label class="check"
+						><input type="checkbox" data-check="get-form" /><span>障害者手帳申請書をもらう</span></label
+					>
+					<label class="check"
+						><input type="checkbox" data-check="pension-confirm" /><span
+							>障害年金受給者証で<br />更新の申請ができるか確認</span
+						></label
+					>
+					<label class="check" data-pension-only
+						><input type="checkbox" data-check="request-diagnosis" /><span>医師に診断書を依頼</span></label
+					>
+
+					<h2>下記の書類を準備</h2>
+					<label class="check"><input type="checkbox" data-check="doc-mynumber" /><span>マイナンバーカード</span></label>
+					<div class="check-row">
+						<label class="check"
+							><input type="checkbox" data-check="doc-id" /><span>本人の身元確認書類</span></label
+						>
+						<details class="pop">
+							<summary>？</summary>
+							<div class="pop-card">
+								<ul>
+									<li>・個人番号カード<small>（マイナンバーカード）</small></li>
+									<li>・運転免許証</li>
+									<li>・運転経歴証明書</li>
+									<li>・旅券<small>（パスポート）</small></li>
+									<li>・身体障害者手帳</li>
+									<li>・精神障害者保健福祉手帳</li>
+									<li>・療育手帳<small>（愛の手帳）</small></li>
+									<li>・在留カード</li>
+									<li>・特別永住者証明書など</li>
+								</ul>
+								<p>詳しくは東京都福祉局のサイトへ</p>
+								<a
+									href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+									target="_blank"
+									rel="noopener">https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+								>
+							</div>
+						</details>
+					</div>
+					<label class="check" data-pension-only
+						><input type="checkbox" data-check="doc-diagnosis" /><span>診断書（障害者手帳用）</span></label
+					>
+					<label class="check"><input type="checkbox" data-check="doc-photo" /><span>本人の顔写真</span></label>
+					<label class="check"
+						><input type="checkbox" data-check="doc-pension-copy" /><span>年金受給者証の写し</span></label
+					>
+				</div>
+			</div>
+
+			<div class="step">
+				<div class="marker"><span class="num" id="start-month2"></span><span class="unit">月</span></div>
+				<div class="step-body">
+					<h2>窓口で申請をする</h2>
+					<label class="check"><input type="checkbox" data-check="submit-check" /><span>書類の最終チェック</span></label>
+					<label class="check"><input type="checkbox" data-check="submit" /><span>窓口に提出</span></label>
+					<h2 class="wait">1ヶ月〜3ヶ月待つ</h2>
+					<p class="wait-note">出来上がったら郵送で通知が届きます</p>
+				</div>
+			</div>
+
+			<div class="year-pill" id="receive-year"></div>
+
+			<div class="step">
+				<div class="marker"><span class="num" id="receive-month"></span><span class="unit">月</span></div>
+				<div class="step-body">
+					<h2>受け取りをする</h2>
+					<label class="check"><input type="checkbox" data-check="recv-id" /><span>指定された身分証明書</span></label>
+					<label class="check"><input type="checkbox" data-check="recv-techou" /><span>お手持ちの障害者手帳</span></label>
+					<label class="check"><input type="checkbox" data-check="recv-copy" /><span>申請書の控え</span></label>
+					<label class="check"><input type="checkbox" data-check="recv-check" /><span>必要書類の最終チェック</span></label>
+					<label class="check final"
+						><input type="checkbox" data-check="recv-final" /><span>窓口で新しい手帳を受け取る</span></label
+					>
+				</div>
+			</div>
+
+			<div class="actions">
+				<button class="btn-outline small" id="dl-image-btn">画像をDL</button>
+				<button class="btn-outline small" id="pdf-btn">印刷用PDF</button>
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	main {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 2rem 1.5rem 4rem;
+		display: grid;
+		grid-template-columns: minmax(280px, 400px) 1fr;
+		gap: 3rem;
+	}
+	@media (max-width: 800px) {
+		main {
+			grid-template-columns: 1fr;
+		}
+	}
+	.hidden {
+		display: none !important;
+	}
+
+	/* 左カラム */
+	.left {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+	}
+	.expiry {
+		margin: 0;
+		align-self: flex-start;
+		font-size: 1.4rem;
+		font-weight: 700;
+	}
+	.cloud {
+		width: 100%;
+		max-width: 364px;
+		aspect-ratio: 760 / 497;
+		background: url('/images/cloud.png') no-repeat center / contain;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+	}
+	.cloud p {
+		margin: 0;
+	}
+	.cloud-title {
+		font-size: 1.3rem;
+		font-weight: 900;
+		margin-bottom: 0.3rem !important;
+	}
+	.cloud-period {
+		font-size: 1.3rem;
+		font-weight: 900;
+		line-height: 1.1;
+	}
+	.cloud-period .num,
+	.cloud-period + .cloud-period .num {
+		color: #ff6f00;
+		font-size: 2.4rem;
+	}
+	.cloud-period {
+		color: #ff6f00;
+	}
+	.cloud-period .unit {
+		color: #1a1a1a;
+	}
+	.ios-note {
+		background: #fff;
+		border-radius: 10px;
+		padding: 0.75rem 1rem;
+		font-size: 0.9rem;
+	}
+	.remind {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+	}
+	.remind-btn {
+		min-width: 241px;
+		box-shadow: 0 0 10px 0 #60adda;
+	}
+	.remind-note {
+		margin: 0;
+		font-size: 0.9rem;
+		text-align: center;
+	}
+	.status {
+		margin: 0;
+		font-size: 0.9rem;
+		color: #fff;
+	}
+	.schedules {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		max-width: 320px;
+		font-size: 0.9rem;
+	}
+	.schedules li {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.3rem 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+	}
+	.schedules button {
+		border: none;
+		border-radius: 6px;
+		background: #fff;
+		color: #83caf3;
+		font-size: 0.8rem;
+		font-weight: 700;
+		padding: 0.2rem 0.6rem;
+	}
+	.toggle-link {
+		align-self: flex-start;
+		color: #fff;
+		font-size: 1.25rem;
+		font-weight: 900;
+		text-decoration: none;
+	}
+	.tips {
+		align-self: flex-start;
+		width: 100%;
+	}
+	.tips summary {
+		color: #fff;
+		font-size: 1.25rem;
+		font-weight: 900;
+		cursor: pointer;
+		list-style: none;
+	}
+	.tips summary::before {
+		content: '▶ ';
+		font-size: 1rem;
+	}
+	.tips[open] summary::before {
+		content: '▼ ';
+	}
+	.tip-card {
+		background: #fff;
+		border-radius: 3px;
+		padding: 0.9rem 1rem;
+		margin-top: 1rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+	}
+	.tip-card p {
+		margin: 0 0 0.5rem;
+	}
+	.tip-link {
+		font-size: 0.75rem;
+		word-break: break-all;
+	}
+
+	/* タイムライン */
+	.timeline {
+		position: relative;
+		padding-left: 3.5rem;
+	}
+	.timeline::before {
+		content: '';
+		position: absolute;
+		left: 25px;
+		top: 10px;
+		bottom: 90px;
+		width: 4px;
+		background: #fff;
+		border-radius: 2px;
+	}
+	.year-pill {
+		position: relative;
+		left: -3.5rem;
+		display: inline-block;
+		background: #fff;
+		color: #83caf3;
+		border-radius: 10px;
+		padding: 0 0.6rem;
+		font-size: 0.9rem;
+		font-weight: 900;
+		margin-bottom: 0.75rem;
+	}
+	.step {
+		position: relative;
+		margin-bottom: 2.5rem;
+	}
+	.marker {
+		position: absolute;
+		left: -3.5rem;
+		top: -5px;
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+		background: #fff;
+		display: flex;
+		align-items: baseline;
+		justify-content: center;
+		padding-top: 8px;
+	}
+	.marker .num {
+		font-size: 1.4rem;
+		font-weight: 900;
+		line-height: 1;
+	}
+	.marker .unit {
+		font-size: 0.75rem;
+		font-weight: 900;
+	}
+	.step-body h2 {
+		margin: 0 0 0.75rem;
+		font-size: 1.25rem;
+		font-weight: 900;
+	}
+	.step-body h2:not(:first-child) {
+		margin-top: 1.5rem;
+	}
+	.wait-note {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 500;
+	}
+	.check-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.check {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		margin: 0 0 0.9rem;
+		font-size: 1.25rem;
+		font-weight: 700;
+		line-height: 1.3;
+		cursor: pointer;
+	}
+	.check input {
+		appearance: none;
+		flex: none;
+		width: 16px;
+		height: 16px;
+		margin: 4px 0 0;
+		background: #fff;
+		cursor: pointer;
+	}
+	.check input:checked {
+		background: #fff
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M2 7l4 4 6-8' stroke='%23ff6f00' stroke-width='2.5' fill='none'/%3E%3C/svg%3E")
+			no-repeat center;
+	}
+	.check:has(input:checked) span {
+		color: #5397bf;
+	}
+	.check.disabled {
+		pointer-events: none;
+	}
+	.check.disabled input {
+		background: #dad5d5;
+	}
+	.check.disabled span {
+		color: #5397bf;
+	}
+	.check.final span {
+		font-weight: 900;
+	}
+	.check.final input {
+		background: #ff6f00;
+	}
+	.check.final input:checked {
+		background: #ff6f00
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M2 7l4 4 6-8' stroke='%23fff' stroke-width='2.5' fill='none'/%3E%3C/svg%3E")
+			no-repeat center;
+	}
+
+	/* ？ポップオーバー */
+	.pop {
+		position: relative;
+		margin-bottom: 0.9rem;
+	}
+	.pop summary {
+		list-style: none;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: #ff6f00;
+		color: #fff;
+		font-size: 0.7rem;
+		font-weight: 900;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+	.pop-card {
+		position: absolute;
+		z-index: 10;
+		left: 30px;
+		top: -10px;
+		width: min(276px, 70vw);
+		background: #fff;
+		border-radius: 3px;
+		padding: 0.75rem 1rem;
+		font-size: 0.85rem;
+	}
+	.pop-card ul {
+		list-style: none;
+		margin: 0 0 0.75rem;
+		padding: 0;
+	}
+	.pop-card small {
+		font-size: 0.75em;
+	}
+	.pop-card p {
+		margin: 0 0 0.25rem;
+	}
+	.pop-card a {
+		color: #83caf3;
+		font-size: 0.8rem;
+		word-break: break-all;
+	}
+
+	.actions {
+		display: flex;
+		gap: 1rem;
+		margin-top: 3rem;
+	}
+	.btn-outline.small {
+		font-size: 1.1rem;
+		padding: 0.4rem 1.5rem;
+	}
+
+	@media print {
+		.left,
+		.actions {
+			display: none;
+		}
+		main {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
+
+<script>
+	import { subscribeToPush, serializeSubscription } from '@mmmike/web-push/client';
+	import { isIos, isStandalone, iosSupportsWebPush } from '../lib/platform';
+	import { loadSettings, loadChecks, saveCheck, renewalPlan, ymToDateString } from '../lib/store';
+
+	const settings = loadSettings();
+	if (!settings) {
+		location.href = '/setup';
+		throw new Error('settings not found');
+	}
+
+	const plan = renewalPlan(settings);
+
+	const setText = (id: string, value: string | number) => {
+		document.getElementById(id)!.textContent = String(value);
+	};
+	setText('expiry-label', `${settings.expiryYear}年${settings.expiryMonth}月`);
+	setText('start-year', plan.start.year);
+	setText('start-month', plan.start.month);
+	setText('end-year', plan.end.year);
+	setText('end-month', plan.end.month);
+	setText('prepare-year', plan.prepare.year);
+	setText('prepare-month', plan.prepare.month);
+	setText('start-month2', plan.start.month);
+	setText('receive-year', plan.receive.year);
+	setText('receive-month', plan.receive.month);
+	setText('before-months', settings.diagnosisMonths);
+
+	// チェックリスト(ローカル保存のみ)
+	const checks = loadChecks();
+	for (const input of document.querySelectorAll<HTMLInputElement>('input[data-check]')) {
+		const id = input.dataset.check!;
+		input.checked = checks[id] === true;
+		input.addEventListener('change', () => {
+			saveCheck(id, input.checked);
+			if (id === 'recv-final' && input.checked) {
+				location.href = '/done';
+			}
+		});
+	}
+
+	// 障害年金受給者は診断書関連をグレーアウト
+	if (settings.hasPension) {
+		for (const label of document.querySelectorAll('[data-pension-only]')) {
+			label.classList.add('disabled');
+			label.querySelector('input')!.disabled = true;
+		}
+	}
+
+	document.getElementById('pdf-btn')!.addEventListener('click', () => window.print());
+	document.getElementById('dl-image-btn')!.addEventListener('click', () => alert('準備中です'));
+
+	// ここからリマインダー(Web Push)まわりは既存実装のまま
+	function todayJst(): string {
+		return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+	}
+
+	async function renderSchedules() {
+		const res = await fetch('/api/schedules');
+		const { schedules } = (await res.json()) as { schedules: { target_date: string }[] };
+		const listEl = document.getElementById('schedule-list')!;
+		listEl.innerHTML = '';
+		for (const s of schedules) {
+			const li = document.createElement('li');
+			const span = document.createElement('span');
+			span.textContent = `${s.target_date} に通知予約済み`;
+			const btn = document.createElement('button');
+			btn.textContent = 'キャンセル';
+			btn.onclick = async () => {
+				await fetch('/api/schedules', {
+					method: 'DELETE',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ targetDate: s.target_date }),
+				});
+				renderSchedules();
+			};
+			li.appendChild(span);
+			li.appendChild(btn);
+			listEl.appendChild(li);
+		}
+	}
+
+	async function init() {
+		const iosInstallEl = document.getElementById('ios-install')!;
+		const iosUpdateEl = document.getElementById('ios-update')!;
+		const remindEl = document.getElementById('remind-area')!;
+
+		if (isIos() && !isStandalone()) {
+			iosInstallEl.classList.remove('hidden');
+			return;
+		}
+		if (isIos() && isStandalone() && !iosSupportsWebPush()) {
+			iosUpdateEl.classList.remove('hidden');
+			return;
+		}
+
+		remindEl.classList.remove('hidden');
+
+		await navigator.serviceWorker.register('/sw.js');
+		await renderSchedules();
+
+		document.getElementById('remind-btn')!.addEventListener('click', async () => {
+			const statusEl = document.getElementById('status')!;
+			try {
+				// 準備開始月と更新開始月の1日に通知(過去日は除外)
+				const targetDates = [ymToDateString(plan.prepare), ymToDateString(plan.start)].filter(
+					(d) => d >= todayJst(),
+				);
+				if (targetDates.length === 0) {
+					statusEl.textContent = '通知対象の日付が過去のため予約できません';
+					return;
+				}
+				const keyRes = await fetch('/api/vapid-public-key');
+				const { publicKey } = (await keyRes.json()) as { publicKey: string };
+				const subscription = await subscribeToPush(publicKey);
+				if (!subscription) {
+					statusEl.textContent = '通知の許可が得られませんでした';
+					return;
+				}
+				for (const targetDate of targetDates) {
+					const res = await fetch('/api/subscribe', {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({
+							subscription: serializeSubscription(subscription),
+							targetDate,
+						}),
+					});
+					if (!res.ok) {
+						const body = (await res.json()) as { error?: string };
+						statusEl.textContent = `エラー: ${body.error ?? res.status}`;
+						return;
+					}
+				}
+				statusEl.textContent = 'リマインドを設定しました';
+				await renderSchedules();
+			} catch (err) {
+				console.error('subscribe error:', err);
+				statusEl.textContent = 'エラーが発生しました';
+			}
+		});
+	}
+
+	init();
+</script>

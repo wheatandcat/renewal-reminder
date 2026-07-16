@@ -1,184 +1,72 @@
 ---
+import Layout from '../layouts/Layout.astro';
 ---
 
-<html lang="ja">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="generator" content={Astro.generator} />
-		<link rel="manifest" href="/manifest.json" />
-		<meta name="theme-color" content="#0f172a" />
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-		<title>Renewal Reminder - Web Push検証</title>
-		<style>
-			body {
-				font-family: system-ui, sans-serif;
-				max-width: 480px;
-				margin: 2rem auto;
-				padding: 0 1rem;
-				color: #0f172a;
-			}
-			section { margin-bottom: 1.5rem; }
-			button {
-				padding: 0.6rem 1.2rem;
-				font-size: 1rem;
-				border-radius: 6px;
-				border: none;
-				background: #0f172a;
-				color: white;
-				cursor: pointer;
-			}
-			input[type="date"] {
-				padding: 0.5rem;
-				font-size: 1rem;
-			}
-			ul { list-style: none; padding: 0; }
-			li {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				padding: 0.5rem 0;
-				border-bottom: 1px solid #e2e8f0;
-			}
-			li button {
-				background: #dc2626;
-				padding: 0.3rem 0.7rem;
-				font-size: 0.85rem;
-			}
-			pre {
-				background: #f1f5f9;
-				padding: 0.75rem;
-				border-radius: 6px;
-				white-space: pre-wrap;
-				font-size: 0.8rem;
-			}
-			.hidden { display: none; }
-		</style>
-	</head>
-	<body>
-		<h1>Renewal Reminder</h1>
-		<p>Web Push通知の検証サイトです。日付を選ぶと、その日の朝8:00(JST)に通知が届きます。</p>
+<Layout>
+	<main>
+		<h1>精神障害者手帳 更新リマインダー</h1>
+		<p class="intro">
+			こんにちは！<br />
+			あなたの障害者手帳更新をサポートします。
+		</p>
+		<p class="note">
+			このwebサービスは現在開発中のベータ版です。<br />
+			実際に必要な書類など間違いがないか、必ずご確認ください。
+		</p>
+		<p class="caption">※東京都の基準で運用しています</p>
+		<img src="/images/welcome-animals.png" alt="" width="359" height="282" />
+		<a class="btn-outline" id="start-btn" href="/setup">はじめる</a>
+	</main>
+</Layout>
 
-		<section id="ios-install" class="hidden">
-			<p>iOSで通知を受け取るには、まずこのページをホーム画面に追加してください。</p>
-			<p>Safariの共有ボタン → 「ホーム画面に追加」を選択後、ホーム画面のアイコンから開き直してください。</p>
-		</section>
+<style>
+	main {
+		max-width: 640px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		text-align: center;
+	}
+	h1 {
+		margin: 0;
+		color: #fff;
+		font-size: clamp(1.6rem, 5vw, 2.5rem);
+		font-weight: 700;
+		word-break: keep-all;
+	}
+	.intro {
+		margin: 1rem 0 0;
+		font-size: 1.1rem;
+	}
+	.note {
+		margin: 0.5rem 0 0;
+		font-size: 1rem;
+	}
+	.caption {
+		margin: 0;
+		font-size: 0.85rem;
+	}
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+	.btn-outline {
+		margin-top: 1rem;
+		min-width: 190px;
+	}
+</style>
 
-		<section id="ios-update" class="hidden">
-			<p>iOSのWeb Push対応にはiOS 16.4以降が必要です。iOSをアップデートしてください。</p>
-		</section>
+<script>
+	import { loadSettings } from '../lib/store';
 
-		<section id="main-ui" class="hidden">
-			<div>
-				<input type="date" id="date-input" />
-				<button id="subscribe-btn">この日付で通知を予約</button>
-			</div>
-			<p id="status"></p>
-
-			<h2>予約一覧</h2>
-			<ul id="schedule-list"></ul>
-		</section>
-
-		<pre id="log"></pre>
-
-		<script>
-			import { subscribeToPush, serializeSubscription } from '@mmmike/web-push/client';
-			import { isIos, isStandalone, iosSupportsWebPush } from '../lib/platform';
-
-			const log = (msg: string) => {
-				const el = document.getElementById('log')!;
-				el.textContent += msg + '\n';
-			};
-
-			function todayJst(): string {
-				return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-			}
-
-			async function renderSchedules() {
-				const res = await fetch('/api/schedules');
-				const { schedules } = (await res.json()) as { schedules: { target_date: string }[] };
-				const listEl = document.getElementById('schedule-list')!;
-				listEl.innerHTML = '';
-				for (const s of schedules) {
-					const li = document.createElement('li');
-					const span = document.createElement('span');
-					span.textContent = s.target_date;
-					const btn = document.createElement('button');
-					btn.textContent = 'キャンセル';
-					btn.onclick = async () => {
-						await fetch('/api/schedules', {
-							method: 'DELETE',
-							headers: { 'content-type': 'application/json' },
-							body: JSON.stringify({ targetDate: s.target_date }),
-						});
-						renderSchedules();
-					};
-					li.appendChild(span);
-					li.appendChild(btn);
-					listEl.appendChild(li);
-				}
-			}
-
-			async function init() {
-				const iosInstallEl = document.getElementById('ios-install')!;
-				const iosUpdateEl = document.getElementById('ios-update')!;
-				const mainUiEl = document.getElementById('main-ui')!;
-
-				if (isIos() && !isStandalone()) {
-					iosInstallEl.classList.remove('hidden');
-					return;
-				}
-				if (isIos() && isStandalone() && !iosSupportsWebPush()) {
-					iosUpdateEl.classList.remove('hidden');
-					return;
-				}
-
-				mainUiEl.classList.remove('hidden');
-
-				const dateInput = document.getElementById('date-input') as HTMLInputElement;
-				dateInput.min = todayJst();
-				dateInput.value = todayJst();
-
-				await navigator.serviceWorker.register('/sw.js');
-				await renderSchedules();
-
-				document.getElementById('subscribe-btn')!.addEventListener('click', async () => {
-					const statusEl = document.getElementById('status')!;
-					try {
-						const keyRes = await fetch('/api/vapid-public-key');
-						const { publicKey } = (await keyRes.json()) as { publicKey: string };
-						const subscription = await subscribeToPush(publicKey);
-						if (!subscription) {
-							statusEl.textContent = '通知の許可が得られませんでした';
-							return;
-						}
-						const res = await fetch('/api/subscribe', {
-							method: 'POST',
-							headers: { 'content-type': 'application/json' },
-							body: JSON.stringify({
-								subscription: serializeSubscription(subscription),
-								targetDate: dateInput.value,
-							}),
-						});
-						if (res.ok) {
-							statusEl.textContent = `${dateInput.value} に通知を予約しました`;
-							await renderSchedules();
-						} else {
-							const body = (await res.json()) as { error?: string };
-							statusEl.textContent = `エラー: ${body.error ?? res.status}`;
-						}
-					} catch (err) {
-						log('subscribe error: ' + err);
-						statusEl.textContent = 'エラーが発生しました';
-					}
-				});
-			}
-
-			init();
-		</script>
-	</body>
-</html>
+	// 設定済みならチェックリスト画面へ
+	document.getElementById('start-btn')!.addEventListener('click', (e) => {
+		if (loadSettings()) {
+			e.preventDefault();
+			location.href = '/checklist';
+		}
+	});
+</script>

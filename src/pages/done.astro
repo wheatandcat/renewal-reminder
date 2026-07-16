@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="更新完了 - 精神障害者手帳 更新リマインダー">
+	<main>
+		<h1>手帳の更新が完了しました</h1>
+		<p>おつかれさまでした！</p>
+		<img src="/images/done-animals.png" alt="" width="348" height="246" />
+		<button class="btn-outline" id="next-btn">次回の更新を設定する</button>
+	</main>
+</Layout>
+
+<style>
+	main {
+		max-width: 640px;
+		margin: 0 auto;
+		padding: 5rem 1.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+		text-align: center;
+	}
+	h1 {
+		margin: 0;
+		color: #fff;
+		font-size: clamp(1.5rem, 5vw, 2.25rem);
+		font-weight: 900;
+	}
+	p {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 900;
+	}
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+	.btn-outline {
+		min-width: 318px;
+		max-width: 100%;
+	}
+</style>
+
+<script>
+	import { clearChecks } from '../lib/store';
+
+	document.getElementById('next-btn')!.addEventListener('click', () => {
+		clearChecks();
+		location.href = '/setup';
+	});
+</script>
