@@ -194,12 +194,16 @@
 
 		remindEl.classList.remove('hidden');
 
-		await navigator.serviceWorker.register('/sw.js');
-		await renderSchedules();
+		const statusEl = document.getElementById('status')!;
 
 		document.getElementById('remind-btn')!.addEventListener('click', async () => {
-			const statusEl = document.getElementById('status')!;
 			try {
+				statusEl.textContent = '設定中…(通知の許可を確認してください)';
+				if (!('serviceWorker' in navigator)) {
+					statusEl.textContent = 'このブラウザはWeb Pushに対応していません(HTTPSまたはlocalhostが必要です)';
+					return;
+				}
+				await navigator.serviceWorker.register('/sw.js');
 				// 準備開始月と更新開始月の1日に通知(過去日は除外)
 				const targetDates = [ymToDateString(plan.prepare), ymToDateString(plan.start)].filter(
 					(d) => d >= todayJst(),
@@ -212,7 +216,10 @@
 				const { publicKey } = (await keyRes.json()) as { publicKey: string };
 				const subscription = await subscribeToPush(publicKey);
 				if (!subscription) {
-					statusEl.textContent = '通知の許可が得られませんでした';
+					statusEl.textContent =
+						Notification.permission === 'denied'
+							? '通知がブロックされています。ブラウザのサイト設定から通知を許可してください'
+							: '通知の許可が得られませんでした';
 					return;
 				}
 				for (const targetDate of targetDates) {
@@ -234,9 +241,15 @@
 				await renderSchedules();
 			} catch (err) {
 				console.error('subscribe error:', err);
-				statusEl.textContent = 'エラーが発生しました';
+				statusEl.textContent = `エラーが発生しました: ${String(err)}`;
 			}
 		});
+
+		// 既存の予約表示とSW登録は失敗してもボタン操作を妨げない
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/sw.js').catch((err) => console.error('sw register error:', err));
+		}
+		renderSchedules().catch((err) => console.error('renderSchedules error:', err));
 	}
 
 	init();
