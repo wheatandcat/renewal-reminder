@@ -169,10 +169,11 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     height: 50px;
     border-radius: 50%;
     background: var(--color-white);
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
+    place-content: center;
     align-items: baseline;
-    justify-content: center;
-    padding-top: 8px;
+    padding-bottom: 3px;
   }
   .marker .num {
     font-size: 1.4rem;
