@@ -87,7 +87,7 @@ import Layout from "../layouts/Layout.astro";
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    background: #fff;
+    background: var(--color-white);
     border-radius: 10px;
     padding: 0.5rem 1rem;
     font-size: 1.5rem;
@@ -103,7 +103,7 @@ import Layout from "../layouts/Layout.astro";
     font-family: inherit;
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--color-text);
   }
   .radios {
     display: flex;
@@ -122,11 +122,11 @@ import Layout from "../layouts/Layout.astro";
     height: 27px;
     margin: 0;
     border-radius: 50%;
-    background: #fff;
+    background: var(--color-white);
     cursor: pointer;
   }
   .radios input:checked {
-    background: radial-gradient(circle, #83caf3 0 8px, #fff 9px);
+    background: radial-gradient(circle, var(--color-primary) 0 8px, var(--color-white) 9px);
   }
   .btn-outline {
     min-width: 190px;

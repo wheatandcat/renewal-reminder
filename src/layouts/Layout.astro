@@ -34,14 +34,24 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
 </html>
 
 <style is:global>
+  :root {
+    /* カラー定数(変更時は manifest.json / theme-color のmetaタグも確認) */
+    --color-primary: #83caf3; /* ベースの水色 */
+    --color-primary-dark: #60adda; /* 水色(濃)・ボタンの影 */
+    --color-accent: #ff6f00; /* オレンジ(チェック・？ボタン・強調) */
+    --color-text: #1a1a1a; /* 基本テキスト */
+    --color-white: #fff;
+    --color-checked: #5397bf; /* チェック済みテキスト */
+    --color-disabled: #dad5d5; /* 無効化チェックボックス */
+  }
   * {
     box-sizing: border-box;
   }
   body {
     margin: 0;
     min-height: 100vh;
-    background: #83caf3;
-    color: #1a1a1a;
+    background: var(--color-primary);
+    color: var(--color-text);
     font-family: "Zen Maru Gothic", system-ui, sans-serif;
     font-weight: 700;
   }
@@ -55,10 +65,10 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
   .btn-outline {
     display: inline-block;
     padding: 0.6rem 2rem;
-    border: 1px solid #fff;
+    border: 1px solid var(--color-white);
     border-radius: 10px;
     background: transparent;
-    color: #fff;
+    color: var(--color-white);
     font-size: 1.25rem;
     font-weight: 900;
     text-align: center;
@@ -68,8 +78,8 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
       color 0.15s;
   }
   .btn-outline:hover:not(:disabled) {
-    background: #fff;
-    color: #83caf3;
+    background: var(--color-white);
+    color: var(--color-primary);
   }
   .btn-outline:disabled {
     opacity: 0.5;
