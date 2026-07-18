@@ -1,0 +1,71 @@
+<details class="pop">
+  <summary>？</summary>
+  <div class="pop-card">
+    <slot />
+  </div>
+</details>
+
+<script>
+  document.addEventListener("click", (e) => {
+    for (const pop of document.querySelectorAll<HTMLDetailsElement>(
+      "details.pop[open]",
+    )) {
+      if (!pop.contains(e.target as Node)) {
+        pop.open = false;
+      }
+    }
+  });
+</script>
+
+<style>
+  /* ？ポップオーバー */
+  .pop {
+    position: relative;
+    margin-bottom: 0.9rem;
+  }
+  .pop summary {
+    list-style: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff6f00;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .pop-card {
+    position: absolute;
+    z-index: 10;
+    left: 30px;
+    top: -10px;
+    width: min(276px, 70vw);
+    background: #fff;
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+  .pop-card :global(ul) {
+    list-style: none;
+    margin: 0 0 0.75rem;
+    padding: 0;
+  }
+  .pop-card :global(.pop-text) {
+    display: inline-block;
+    margin: 0 0 0.75rem;
+  }
+  .pop-card :global(small) {
+    font-size: 0.75em;
+  }
+  .pop-card :global(p) {
+    margin: 0 0 0.25rem;
+  }
+  .pop-card :global(a) {
+    color: #83caf3;
+    font-size: 0.8rem;
+    word-break: break-all;
+  }
+</style>
