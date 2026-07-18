@@ -16,11 +16,18 @@ export const GET: APIRoute = async ({ locals }) => {
 };
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
-  const { targetDate } = await request.json<{ targetDate: string }>();
-  await env.DB.prepare(
-    `DELETE FROM schedules WHERE user_id = ? AND target_date = ? AND sent_at IS NULL`,
-  )
-    .bind(locals.userId, targetDate)
-    .run();
+  const { targetDate } = await request.json<{ targetDate?: string }>();
+  if (targetDate) {
+    await env.DB.prepare(
+      `DELETE FROM schedules WHERE user_id = ? AND target_date = ? AND sent_at IS NULL`,
+    )
+      .bind(locals.userId, targetDate)
+      .run();
+  } else {
+    // targetDate 省略時は未送信の予約をすべて削除
+    await env.DB.prepare(`DELETE FROM schedules WHERE user_id = ? AND sent_at IS NULL`)
+      .bind(locals.userId)
+      .run();
+  }
   return new Response(JSON.stringify({ ok: true }));
 };

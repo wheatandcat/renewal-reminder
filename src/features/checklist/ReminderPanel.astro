@@ -1,3 +1,8 @@
+---
+// schedule-list はデバッグ用のためローカル起動時のみ表示する
+const isDev = import.meta.env.DEV;
+---
+
 <p class="expiry">現在の有効期限：<span id="expiry-label"></span></p>
 
 <div class="cloud">
@@ -33,7 +38,7 @@
     />このデバイスへPush通知を送ります
   </p>
   <p id="status" class="status"></p>
-  <ul id="schedule-list" class="schedules"></ul>
+  {isDev && <ul id="schedule-list" class="schedules" />}
 </div>
 
 <style>
@@ -165,13 +170,24 @@
     return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   }
 
+  const statusEl = document.getElementById("status")!;
+
   async function renderSchedules() {
     const res = await fetch("/api/schedules");
     const { schedules } = (await res.json()) as {
       schedules: { target_date: string }[];
     };
-    const listEl = document.getElementById("schedule-list")!;
+    if (schedules?.length > 0) {
+      statusEl.textContent = "リマインド設定済み";
+    } else {
+      statusEl.textContent = "リマインドは設定されていません";
+    }
+
+    // schedule-list はデバッグ用のためローカル起動時のみ存在する
+    const listEl = document.getElementById("schedule-list");
+    if (!listEl) return;
     listEl.innerHTML = "";
+
     for (const s of schedules) {
       const li = document.createElement("li");
       const span = document.createElement("span");
@@ -208,8 +224,6 @@
 
     remindEl.classList.remove("hidden");
 
-    const statusEl = document.getElementById("status")!;
-
     document
       .getElementById("remind-btn")!
       .addEventListener("click", async () => {
@@ -240,6 +254,12 @@
                 : "通知の許可が得られませんでした";
             return;
           }
+          // 過去に設定したリマインドを削除してから登録し直す
+          await fetch("/api/schedules", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({}),
+          });
           for (const targetDate of targetDates) {
             const res = await fetch("/api/subscribe", {
               method: "POST",
