@@ -64,16 +64,58 @@
           >診断書（障害者手帳用）</span
         ></label
       >
-      <label class="check"
-        ><input type="checkbox" data-check="doc-photo" /><span
-          >本人の顔写真</span
-        ></label
-      >
-      <label class="check"
-        ><input type="checkbox" data-check="doc-pension-copy" /><span
-          >年金受給者証の写し</span
-        ></label
-      >
+      <div class="check-row">
+        <label class="check"
+          ><input type="checkbox" data-check="doc-photo" /><span
+            >本人の顔写真</span
+          ></label
+        >
+        <details class="pop">
+          <summary>？</summary>
+          <div class="pop-card">
+            <p class="pop-text">
+              縦4センチメートル×横3センチメートル、脱帽・上半身、申請日から1年以内に撮影したもの。写真の裏面には、氏名と生年月日を必ず記入してください。
+            </p>
+            <p>詳しくは東京都福祉局のサイトへ</p>
+            <a
+              href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+              target="_blank"
+              rel="noopener"
+              >https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+            >
+          </div>
+        </details>
+      </div>
+      <div class="check-row">
+        <label class="check"
+          ><input type="checkbox" data-check="doc-pension-copy" /><span
+            >年金受給者証の写し</span
+          ></label
+        >
+        <details class="pop">
+          <summary>？</summary>
+          <div class="pop-card">
+            <p class="pop-text">
+              精神障害を支給事由とした障害年金もしくは特別障害給付金を現に受給していることを証する書類（年金証書等）の写し。
+            </p>
+            <p>※同意書への署名が必要です</p>
+            <a
+              href="https://www.fukushi.metro.tokyo.lg.jp/documents/d/fukushi/2025-04-22-163619-772"
+              target="_blank"
+              rel="noopener"
+              class="pop-text"
+              >https://www.fukushi.metro.tokyo.lg.jp/documents/d/fukushi/2025-04-22-163619-772</a
+            >
+            <p>詳しくは東京都福祉局のサイトへ</p>
+            <a
+              href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+              target="_blank"
+              rel="noopener"
+              >https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+            >
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 
@@ -293,6 +335,10 @@
     list-style: none;
     margin: 0 0 0.75rem;
     padding: 0;
+  }
+  .pop-card .pop-text {
+    display: inline-block;
+    margin: 0 0 0.75rem;
   }
   .pop-card small {
     font-size: 0.75em;
