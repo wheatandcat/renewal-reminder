@@ -1,72 +1,72 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-	<main>
-		<h1>精神障害者手帳 更新リマインダー</h1>
-		<p class="intro">
-			こんにちは！<br />
-			あなたの障害者手帳更新をサポートします。
-		</p>
-		<p class="note">
-			このwebサービスは現在開発中のベータ版です。<br />
-			実際に必要な書類など間違いがないか、必ずご確認ください。
-		</p>
-		<p class="caption">※東京都の基準で運用しています</p>
-		<img src="/images/welcome-animals.png" alt="" width="359" height="282" />
-		<a class="btn-outline" id="start-btn" href="/setup">はじめる</a>
-	</main>
+  <main>
+    <h1>精神障害者手帳 更新リマインダー</h1>
+    <p class="intro">
+      こんにちは！<br />
+      あなたの障害者手帳更新をサポートします。
+    </p>
+    <p class="note">
+      このwebサービスは現在開発中のベータ版です。<br />
+      実際に必要な書類など間違いがないか、必ずご確認ください。
+    </p>
+    <p class="caption">※東京都の基準で運用しています</p>
+    <img src="/images/welcome-animals.png" alt="" width="359" height="282" />
+    <a class="btn-outline" id="start-btn" href="/setup">はじめる</a>
+  </main>
 </Layout>
 
 <style>
-	main {
-		max-width: 640px;
-		margin: 0 auto;
-		padding: 3rem 1.5rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 1rem;
-		text-align: center;
-	}
-	h1 {
-		margin: 0;
-		color: #fff;
-		font-size: clamp(1.6rem, 5vw, 2.5rem);
-		font-weight: 700;
-		word-break: keep-all;
-	}
-	.intro {
-		margin: 1rem 0 0;
-		font-size: 1.1rem;
-	}
-	.note {
-		margin: 0.5rem 0 0;
-		font-size: 1rem;
-	}
-	.caption {
-		margin: 0;
-		font-size: 0.85rem;
-	}
-	img {
-		max-width: 100%;
-		height: auto;
-	}
-	.btn-outline {
-		margin-top: 1rem;
-		min-width: 190px;
-	}
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+  h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.6rem, 5vw, 2.5rem);
+    font-weight: 700;
+    word-break: keep-all;
+  }
+  .intro {
+    margin: 1rem 0 0;
+    font-size: 1.1rem;
+  }
+  .note {
+    margin: 0.5rem 0 0;
+    font-size: 1rem;
+  }
+  .caption {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  .btn-outline {
+    margin-top: 1rem;
+    min-width: 190px;
+  }
 </style>
 
 <script>
-	import { loadSettings } from '../lib/store';
+  import { loadSettings } from "../lib/store";
 
-	// 設定済みならチェックリスト画面へ
-	document.getElementById('start-btn')!.addEventListener('click', (e) => {
-		if (loadSettings()) {
-			e.preventDefault();
-			location.href = '/checklist';
-		}
-	});
+  // 設定済みならチェックリスト画面へ
+  document.getElementById("start-btn")!.addEventListener("click", (e) => {
+    if (loadSettings()) {
+      e.preventDefault();
+      location.href = "/checklist";
+    }
+  });
 </script>

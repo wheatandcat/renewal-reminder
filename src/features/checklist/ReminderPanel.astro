@@ -1,256 +1,278 @@
 <p class="expiry">現在の有効期限：<span id="expiry-label"></span></p>
 
 <div class="cloud">
-	<p class="cloud-title">次回の更新期間は</p>
-	<p class="cloud-period">
-		<span class="num" id="start-year"></span>年<span class="num" id="start-month"></span>月<span class="unit">から</span>
-	</p>
-	<p class="cloud-period">
-		<span class="num" id="end-year"></span>年<span class="num" id="end-month"></span>月<span class="unit">まで</span>
-	</p>
+  <p class="cloud-title">次回の更新期間は</p>
+  <p class="cloud-period">
+    <span class="num" id="start-year"></span>年<span
+      class="num"
+      id="start-month"></span>月<span class="unit">から</span>
+  </p>
+  <p class="cloud-period">
+    <span class="num" id="end-year"></span>年<span class="num" id="end-month"
+    ></span>月<span class="unit">まで</span>
+  </p>
 </div>
 
 <section id="ios-install" class="hidden ios-note">
-	<p>iOSで通知を受け取るには、まずこのページをホーム画面に追加してください。</p>
-	<p>Safariの共有ボタン → 「ホーム画面に追加」を選択後、ホーム画面のアイコンから開き直してください。</p>
+  <p>iOSで通知を受け取るには、まずこのページをホーム画面に追加してください。</p>
+  <p>
+    Safariの共有ボタン →
+    「ホーム画面に追加」を選択後、ホーム画面のアイコンから開き直してください。
+  </p>
 </section>
 <section id="ios-update" class="hidden ios-note">
-	<p>iOSのWeb Push対応にはiOS 16.4以降が必要です。iOSをアップデートしてください。</p>
+  <p>
+    iOSのWeb Push対応にはiOS 16.4以降が必要です。iOSをアップデートしてください。
+  </p>
 </section>
 
 <div id="remind-area" class="remind hidden">
-	<button class="btn-outline remind-btn" id="remind-btn">リマインドする</button>
-	<p class="remind-note">
-		更新月の<span id="before-months"></span>ヶ月前と更新月に<br />このデバイスへPush通知を送ります
-	</p>
-	<p id="status" class="status"></p>
-	<ul id="schedule-list" class="schedules"></ul>
+  <button class="btn-outline remind-btn" id="remind-btn">リマインドする</button>
+  <p class="remind-note">
+    更新月の<span id="before-months"></span>ヶ月前と更新月に<br
+    />このデバイスへPush通知を送ります
+  </p>
+  <p id="status" class="status"></p>
+  <ul id="schedule-list" class="schedules"></ul>
 </div>
 
 <style>
-	.hidden {
-		display: none !important;
-	}
-	.expiry {
-		margin: 0;
-		align-self: flex-start;
-		font-size: 1.4rem;
-		font-weight: 700;
-	}
-	.cloud {
-		width: 100%;
-		max-width: 364px;
-		aspect-ratio: 760 / 497;
-		background: url('/images/cloud.png') no-repeat center / contain;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-	}
-	.cloud p {
-		margin: 0;
-	}
-	.cloud-title {
-		font-size: 1.3rem;
-		font-weight: 900;
-		margin-bottom: 0.3rem !important;
-	}
-	.cloud-period {
-		font-size: 1.3rem;
-		font-weight: 900;
-		line-height: 1.1;
-	}
-	.cloud-period .num,
-	.cloud-period + .cloud-period .num {
-		color: #ff6f00;
-		font-size: 2.4rem;
-	}
-	.cloud-period {
-		color: #ff6f00;
-	}
-	.cloud-period .unit {
-		color: #1a1a1a;
-	}
-	.ios-note {
-		background: #fff;
-		border-radius: 10px;
-		padding: 0.75rem 1rem;
-		font-size: 0.9rem;
-	}
-	.remind {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
-		width: 100%;
-	}
-	.remind-btn {
-		min-width: 241px;
-		box-shadow: 0 0 10px 0 #60adda;
-	}
-	.remind-note {
-		margin: 0;
-		font-size: 0.9rem;
-		text-align: center;
-	}
-	.status {
-		margin: 0;
-		font-size: 0.9rem;
-		color: #fff;
-	}
-	.schedules {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		width: 100%;
-		max-width: 320px;
-		font-size: 0.9rem;
-	}
-	.schedules li {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 0.3rem 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-	}
-	.schedules button {
-		border: none;
-		border-radius: 6px;
-		background: #fff;
-		color: #83caf3;
-		font-size: 0.8rem;
-		font-weight: 700;
-		padding: 0.2rem 0.6rem;
-	}
+  .hidden {
+    display: none !important;
+  }
+  .expiry {
+    margin: 0;
+    align-self: flex-start;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .cloud {
+    width: 100%;
+    max-width: 364px;
+    aspect-ratio: 760 / 497;
+    background: url("/images/cloud.png") no-repeat center / contain;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .cloud p {
+    margin: 0;
+  }
+  .cloud-title {
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin-bottom: 0.3rem !important;
+  }
+  .cloud-period {
+    font-size: 1.3rem;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .cloud-period .num,
+  .cloud-period + .cloud-period .num {
+    color: #ff6f00;
+    font-size: 2.4rem;
+  }
+  .cloud-period {
+    color: #ff6f00;
+  }
+  .cloud-period .unit {
+    color: #1a1a1a;
+  }
+  .ios-note {
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  .remind {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .remind-btn {
+    min-width: 241px;
+    box-shadow: 0 0 10px 0 #60adda;
+  }
+  .remind-note {
+    margin: 0;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .status {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #fff;
+  }
+  .schedules {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 320px;
+    font-size: 0.9rem;
+  }
+  .schedules li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  .schedules button {
+    border: none;
+    border-radius: 6px;
+    background: #fff;
+    color: #83caf3;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+  }
 </style>
 
 <script>
-	import { subscribeToPush, serializeSubscription } from '@mmmike/web-push/client';
-	import { isIos, isStandalone, iosSupportsWebPush } from '../../lib/platform';
-	import { loadSettings, renewalPlan, ymToDateString } from '../../lib/store';
+  import {
+    subscribeToPush,
+    serializeSubscription,
+  } from "@mmmike/web-push/client";
+  import { isIos, isStandalone, iosSupportsWebPush } from "../../lib/platform";
+  import { loadSettings, renewalPlan, ymToDateString } from "../../lib/store";
 
-	const settings = loadSettings();
-	if (!settings) {
-		location.href = '/setup';
-		throw new Error('settings not found');
-	}
+  const settings = loadSettings();
+  if (!settings) {
+    location.href = "/setup";
+    throw new Error("settings not found");
+  }
 
-	const plan = renewalPlan(settings);
+  const plan = renewalPlan(settings);
 
-	const setText = (id: string, value: string | number) => {
-		document.getElementById(id)!.textContent = String(value);
-	};
-	setText('expiry-label', `${settings.expiryYear}年${settings.expiryMonth}月`);
-	setText('start-year', plan.start.year);
-	setText('start-month', plan.start.month);
-	setText('end-year', plan.end.year);
-	setText('end-month', plan.end.month);
-	setText('before-months', settings.diagnosisMonths);
+  const setText = (id: string, value: string | number) => {
+    document.getElementById(id)!.textContent = String(value);
+  };
+  setText("expiry-label", `${settings.expiryYear}年${settings.expiryMonth}月`);
+  setText("start-year", plan.start.year);
+  setText("start-month", plan.start.month);
+  setText("end-year", plan.end.year);
+  setText("end-month", plan.end.month);
+  setText("before-months", settings.diagnosisMonths);
 
-	// リマインダー(Web Push)まわり
-	function todayJst(): string {
-		return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-	}
+  // リマインダー(Web Push)まわり
+  function todayJst(): string {
+    return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  }
 
-	async function renderSchedules() {
-		const res = await fetch('/api/schedules');
-		const { schedules } = (await res.json()) as { schedules: { target_date: string }[] };
-		const listEl = document.getElementById('schedule-list')!;
-		listEl.innerHTML = '';
-		for (const s of schedules) {
-			const li = document.createElement('li');
-			const span = document.createElement('span');
-			span.textContent = `${s.target_date} に通知予約済み`;
-			const btn = document.createElement('button');
-			btn.textContent = 'キャンセル';
-			btn.onclick = async () => {
-				await fetch('/api/schedules', {
-					method: 'DELETE',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({ targetDate: s.target_date }),
-				});
-				renderSchedules();
-			};
-			li.appendChild(span);
-			li.appendChild(btn);
-			listEl.appendChild(li);
-		}
-	}
+  async function renderSchedules() {
+    const res = await fetch("/api/schedules");
+    const { schedules } = (await res.json()) as {
+      schedules: { target_date: string }[];
+    };
+    const listEl = document.getElementById("schedule-list")!;
+    listEl.innerHTML = "";
+    for (const s of schedules) {
+      const li = document.createElement("li");
+      const span = document.createElement("span");
+      span.textContent = `${s.target_date} に通知予約済み`;
+      const btn = document.createElement("button");
+      btn.textContent = "キャンセル";
+      btn.onclick = async () => {
+        await fetch("/api/schedules", {
+          method: "DELETE",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ targetDate: s.target_date }),
+        });
+        renderSchedules();
+      };
+      li.appendChild(span);
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    }
+  }
 
-	async function init() {
-		const iosInstallEl = document.getElementById('ios-install')!;
-		const iosUpdateEl = document.getElementById('ios-update')!;
-		const remindEl = document.getElementById('remind-area')!;
+  async function init() {
+    const iosInstallEl = document.getElementById("ios-install")!;
+    const iosUpdateEl = document.getElementById("ios-update")!;
+    const remindEl = document.getElementById("remind-area")!;
 
-		if (isIos() && !isStandalone()) {
-			iosInstallEl.classList.remove('hidden');
-			return;
-		}
-		if (isIos() && isStandalone() && !iosSupportsWebPush()) {
-			iosUpdateEl.classList.remove('hidden');
-			return;
-		}
+    if (isIos() && !isStandalone()) {
+      iosInstallEl.classList.remove("hidden");
+      return;
+    }
+    if (isIos() && isStandalone() && !iosSupportsWebPush()) {
+      iosUpdateEl.classList.remove("hidden");
+      return;
+    }
 
-		remindEl.classList.remove('hidden');
+    remindEl.classList.remove("hidden");
 
-		const statusEl = document.getElementById('status')!;
+    const statusEl = document.getElementById("status")!;
 
-		document.getElementById('remind-btn')!.addEventListener('click', async () => {
-			try {
-				statusEl.textContent = '設定中…(通知の許可を確認してください)';
-				if (!('serviceWorker' in navigator)) {
-					statusEl.textContent = 'このブラウザはWeb Pushに対応していません(HTTPSまたはlocalhostが必要です)';
-					return;
-				}
-				await navigator.serviceWorker.register('/sw.js');
-				// 準備開始月と更新開始月の1日に通知(過去日は除外)
-				const targetDates = [ymToDateString(plan.prepare), ymToDateString(plan.start)].filter(
-					(d) => d >= todayJst(),
-				);
-				if (targetDates.length === 0) {
-					statusEl.textContent = '通知対象の日付が過去のため予約できません';
-					return;
-				}
-				const keyRes = await fetch('/api/vapid-public-key');
-				const { publicKey } = (await keyRes.json()) as { publicKey: string };
-				const subscription = await subscribeToPush(publicKey);
-				if (!subscription) {
-					statusEl.textContent =
-						Notification.permission === 'denied'
-							? '通知がブロックされています。ブラウザのサイト設定から通知を許可してください'
-							: '通知の許可が得られませんでした';
-					return;
-				}
-				for (const targetDate of targetDates) {
-					const res = await fetch('/api/subscribe', {
-						method: 'POST',
-						headers: { 'content-type': 'application/json' },
-						body: JSON.stringify({
-							subscription: serializeSubscription(subscription),
-							targetDate,
-						}),
-					});
-					if (!res.ok) {
-						const body = (await res.json()) as { error?: string };
-						statusEl.textContent = `エラー: ${body.error ?? res.status}`;
-						return;
-					}
-				}
-				statusEl.textContent = 'リマインドを設定しました';
-				await renderSchedules();
-			} catch (err) {
-				console.error('subscribe error:', err);
-				statusEl.textContent = `エラーが発生しました: ${String(err)}`;
-			}
-		});
+    document
+      .getElementById("remind-btn")!
+      .addEventListener("click", async () => {
+        try {
+          statusEl.textContent = "設定中…(通知の許可を確認してください)";
+          if (!("serviceWorker" in navigator)) {
+            statusEl.textContent =
+              "このブラウザはWeb Pushに対応していません(HTTPSまたはlocalhostが必要です)";
+            return;
+          }
+          await navigator.serviceWorker.register("/sw.js");
+          // 準備開始月と更新開始月の1日に通知(過去日は除外)
+          const targetDates = [
+            ymToDateString(plan.prepare),
+            ymToDateString(plan.start),
+          ].filter((d) => d >= todayJst());
+          if (targetDates.length === 0) {
+            statusEl.textContent = "通知対象の日付が過去のため予約できません";
+            return;
+          }
+          const keyRes = await fetch("/api/vapid-public-key");
+          const { publicKey } = (await keyRes.json()) as { publicKey: string };
+          const subscription = await subscribeToPush(publicKey);
+          if (!subscription) {
+            statusEl.textContent =
+              Notification.permission === "denied"
+                ? "通知がブロックされています。ブラウザのサイト設定から通知を許可してください"
+                : "通知の許可が得られませんでした";
+            return;
+          }
+          for (const targetDate of targetDates) {
+            const res = await fetch("/api/subscribe", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                subscription: serializeSubscription(subscription),
+                targetDate,
+              }),
+            });
+            if (!res.ok) {
+              const body = (await res.json()) as { error?: string };
+              statusEl.textContent = `エラー: ${body.error ?? res.status}`;
+              return;
+            }
+          }
+          statusEl.textContent = "リマインドを設定しました";
+          await renderSchedules();
+        } catch (err) {
+          console.error("subscribe error:", err);
+          statusEl.textContent = `エラーが発生しました: ${String(err)}`;
+        }
+      });
 
-		// 既存の予約表示とSW登録は失敗してもボタン操作を妨げない
-		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('/sw.js').catch((err) => console.error('sw register error:', err));
-		}
-		renderSchedules().catch((err) => console.error('renderSchedules error:', err));
-	}
+    // 既存の予約表示とSW登録は失敗してもボタン操作を妨げない
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .catch((err) => console.error("sw register error:", err));
+    }
+    renderSchedules().catch((err) =>
+      console.error("renderSchedules error:", err),
+    );
+  }
 
-	init();
+  init();
 </script>
