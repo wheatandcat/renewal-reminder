@@ -15,11 +15,31 @@ import Layout from "../layouts/Layout.astro";
     </p>
     <p class="caption">※東京都の基準で運用しています</p>
     <img src="/images/welcome-animals.png" alt="" width="359" height="282" />
+
+    <section id="ios-home-note" class="hidden ios-note">
+      <p>
+        iOSでPush通知を受け取るには、ホーム画面に追加してご利用ください。
+      </p>
+    </section>
+
+    <button type="button" class="btn-outline hidden" id="install-btn">
+      ホーム画面に追加
+    </button>
+    <section id="install-guide" class="hidden ios-note">
+      <p>
+        Safariの共有ボタン →
+        「ホーム画面に追加」を選択後、ホーム画面のアイコンから開き直してください。
+      </p>
+    </section>
+
     <a class="btn-outline" id="start-btn" href="/setup">はじめる</a>
   </main>
 </Layout>
 
 <style>
+  .hidden {
+    display: none !important;
+  }
   main {
     max-width: 640px;
     margin: 0 auto;
@@ -57,16 +77,76 @@ import Layout from "../layouts/Layout.astro";
     margin-top: 1rem;
     min-width: 190px;
   }
+  .btn-outline:disabled,
+  .btn-outline[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .ios-note {
+    width: 100%;
+    max-width: 400px;
+    background: var(--color-white);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  .ios-note p {
+    margin: 0;
+  }
 </style>
 
 <script>
   import { loadSettings } from "../lib/store";
+  import { isAndroid, isIos, isStandalone } from "../lib/platform";
 
-  // 設定済みならチェックリスト画面へ
-  document.getElementById("start-btn")!.addEventListener("click", (e) => {
+  const ios = isIos();
+  const standalone = isStandalone();
+
+  const startBtn = document.getElementById("start-btn") as HTMLAnchorElement;
+  const iosHomeNoteEl = document.getElementById("ios-home-note")!;
+  const installBtn = document.getElementById(
+    "install-btn",
+  ) as HTMLButtonElement;
+  const installGuideEl = document.getElementById("install-guide")!;
+
+  // iOSはホーム画面に追加(standalone)しないとWeb Pushを受け取れない
+  const iosNeedsHomeScreen = ios && !standalone;
+  if (iosNeedsHomeScreen) {
+    iosHomeNoteEl.classList.remove("hidden");
+    startBtn.setAttribute("aria-disabled", "true");
+  }
+
+  startBtn.addEventListener("click", (e) => {
+    if (iosNeedsHomeScreen) {
+      e.preventDefault();
+      return;
+    }
     if (loadSettings()) {
       e.preventDefault();
       location.href = "/checklist";
+    }
+  });
+
+  // ホーム画面追加ボタン: Android/iOSのブラウザ表示時のみ表示
+  let deferredInstallPrompt: any = null;
+  if ((isAndroid() || ios) && !standalone) {
+    installBtn.classList.remove("hidden");
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      return;
+    }
+    if (ios) {
+      installGuideEl.classList.remove("hidden");
     }
   });
 </script>
