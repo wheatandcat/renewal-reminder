@@ -1,4 +1,4 @@
-import { sendReminderPush } from './webpush';
+import { sendReminderPush, type ScheduleType } from './webpush';
 
 export function todayJst(): string {
   return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -10,12 +10,13 @@ interface DueRow {
   endpoint: string;
   p256dh: string;
   auth: string;
+  type: ScheduleType;
 }
 
 export async function runDailyPushJob(env: Env) {
   const date = todayJst();
   const { results } = await env.DB.prepare(
-    `SELECT s.id AS schedule_id, sub.id AS sub_id, sub.endpoint, sub.p256dh, sub.auth
+    `SELECT s.id AS schedule_id, sub.id AS sub_id, sub.endpoint, sub.p256dh, sub.auth, s.type AS type
      FROM schedules s
      JOIN subscriptions sub ON sub.user_id = s.user_id
      WHERE s.target_date = ? AND s.sent_at IS NULL`,
@@ -27,7 +28,7 @@ export async function runDailyPushJob(env: Env) {
     try {
       const delivered = await sendReminderPush(
         { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
-        date,
+        row.type,
         env,
       );
       if (delivered) {

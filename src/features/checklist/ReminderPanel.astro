@@ -236,10 +236,12 @@ const isDev = import.meta.env.DEV;
           }
           await navigator.serviceWorker.register("/sw.js");
           // 準備開始月と更新開始月の1日に通知(過去日は除外)
-          const targetDates = [
-            ymToDateString(plan.prepare),
-            ymToDateString(plan.start),
-          ].filter((d) => d >= todayJst());
+          const targetDates = (
+            [
+              { targetDate: ymToDateString(plan.prepare), type: "prepare" as const },
+              { targetDate: ymToDateString(plan.start), type: "start" as const },
+            ]
+          ).filter((s) => s.targetDate >= todayJst());
           if (targetDates.length === 0) {
             statusEl.textContent = "通知対象の日付が過去のため予約できません";
             return;
@@ -260,13 +262,14 @@ const isDev = import.meta.env.DEV;
             headers: { "content-type": "application/json" },
             body: JSON.stringify({}),
           });
-          for (const targetDate of targetDates) {
+          for (const { targetDate, type } of targetDates) {
             const res = await fetch("/api/subscribe", {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({
                 subscription: serializeSubscription(subscription),
                 targetDate,
+                type,
               }),
             });
             if (!res.ok) {

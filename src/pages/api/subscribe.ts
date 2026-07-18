@@ -6,18 +6,25 @@ export const prerender = false;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+const SCHEDULE_TYPES = ['prepare', 'start'] as const;
+type ScheduleType = (typeof SCHEDULE_TYPES)[number];
+
 export const POST: APIRoute = async ({ request, locals }) => {
   const body = await request.json<{
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } };
     targetDate: string;
+    type: ScheduleType;
   }>();
-  const { subscription, targetDate } = body;
+  const { subscription, targetDate, type } = body;
 
   if (!subscription?.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
     return new Response(JSON.stringify({ error: 'invalid subscription' }), { status: 400 });
   }
   if (!DATE_RE.test(targetDate) || targetDate < todayJst()) {
     return new Response(JSON.stringify({ error: 'invalid targetDate' }), { status: 400 });
+  }
+  if (!SCHEDULE_TYPES.includes(type)) {
+    return new Response(JSON.stringify({ error: 'invalid type' }), { status: 400 });
   }
 
   const userId = locals.userId;
@@ -28,10 +35,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
        ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id`,
     ).bind(userId, subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth),
     env.DB.prepare(
-      `INSERT INTO schedules (user_id, target_date)
-       VALUES (?, ?)
-       ON CONFLICT(user_id, target_date) DO NOTHING`,
-    ).bind(userId, targetDate),
+      `INSERT INTO schedules (user_id, target_date, type)
+       VALUES (?, ?, ?)
+       ON CONFLICT(user_id, target_date) DO UPDATE SET type = excluded.type`,
+    ).bind(userId, targetDate, type),
   ]);
 
   return new Response(JSON.stringify({ ok: true }));
