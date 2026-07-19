@@ -17,7 +17,7 @@ export function sendReminderPush(subscription: PushSubscriptionData, type: Sched
   const { title, body } = NOTIFICATION_CONTENT[type];
   return sendPushNotification(
     subscription,
-    { title, body, url: '/' },
+    { title, body, url: '/checklist' },
     {
       publicKey: env.VAPID_PUBLIC_KEY,
       privateKey: env.VAPID_PRIVATE_KEY,

@@ -114,6 +114,8 @@ import Layout from "../layouts/Layout.astro";
   if (iosNeedsHomeScreen) {
     iosHomeNoteEl.classList.remove("hidden");
     startBtn.setAttribute("aria-disabled", "true");
+  } else if (loadSettings()) {
+    location.href = "/checklist";
   }
 
   startBtn.addEventListener("click", (e) => {

@@ -1,6 +1,6 @@
 {
-  "name": "Renewal Reminder",
-  "short_name": "Reminder",
+  "name": "手帳更新",
+  "short_name": "手帳更新",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
