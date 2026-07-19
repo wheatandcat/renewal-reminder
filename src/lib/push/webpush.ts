@@ -23,5 +23,6 @@ export function sendReminderPush(subscription: PushSubscriptionData, type: Sched
       privateKey: env.VAPID_PRIVATE_KEY,
       subject: env.VAPID_SUBJECT,
     },
+    { urgency: 'high' },
   );
 }
