@@ -92,6 +92,7 @@ import Layout from "../layouts/Layout.astro";
     padding: 0.5rem 1rem;
     font-size: 1.5rem;
     font-weight: 700;
+    cursor: pointer;
   }
   .select-box select {
     appearance: none;
@@ -126,7 +127,11 @@ import Layout from "../layouts/Layout.astro";
     cursor: pointer;
   }
   .radios input:checked {
-    background: radial-gradient(circle, var(--color-primary) 0 8px, var(--color-white) 9px);
+    background: radial-gradient(
+      circle,
+      var(--color-primary) 0 8px,
+      var(--color-white) 9px
+    );
   }
   .btn-outline {
     min-width: 190px;
@@ -145,6 +150,16 @@ import Layout from "../layouts/Layout.astro";
   const diagnosisSelect = document.getElementById(
     "diagnosis-months",
   ) as HTMLSelectElement;
+
+  for (const select of [yearSelect, monthSelect, diagnosisSelect]) {
+    const label = select.closest<HTMLLabelElement>(".select-box");
+    label?.addEventListener("click", (e) => {
+      if (e.target === select) return;
+      e.preventDefault();
+      select.focus();
+      select.showPicker?.();
+    });
+  }
 
   const currentYear = new Date().getFullYear();
   for (let y = currentYear; y <= currentYear + 10; y++) {
