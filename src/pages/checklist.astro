@@ -42,6 +42,14 @@ import Checklist from "../features/checklist/Checklist.astro";
           >
         </div>
       </details>
+
+      <button
+        type="button"
+        class="btn-outline hidden"
+        id="checklist-install-btn"
+      >
+        ホーム画面に追加
+      </button>
     </aside>
 
     <Checklist />
@@ -111,6 +119,13 @@ import Checklist from "../features/checklist/Checklist.astro";
     word-break: break-all;
   }
 
+  #checklist-install-btn {
+    align-self: flex-start;
+  }
+  .hidden {
+    display: none !important;
+  }
+
   @media print {
     .left {
       display: none;
@@ -120,3 +135,32 @@ import Checklist from "../features/checklist/Checklist.astro";
     }
   }
 </style>
+
+<script>
+  import { isAndroid, isStandalone } from "../lib/platform";
+
+  const installBtn = document.getElementById(
+    "checklist-install-btn",
+  ) as HTMLButtonElement;
+
+  // Androidでホーム画面経由(standalone)以外で開いた場合のみ表示
+  const needsInstallButton = isAndroid() && !isStandalone();
+
+  let deferredInstallPrompt: any = null;
+
+  if (needsInstallButton) {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      installBtn.classList.remove("hidden");
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.classList.add("hidden");
+    });
+  }
+</script>
