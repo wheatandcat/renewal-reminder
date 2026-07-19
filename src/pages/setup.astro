@@ -1,0 +1,203 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="設定 - 精神障害者手帳 更新リマインダー">
+  <main>
+    <section>
+      <h2>
+        現在お持ちの障害者手帳の<br />有効期限を教えてください。
+      </h2>
+      <p class="caption">日付はあとから設定で変更できます</p>
+      <div class="selects">
+        <label class="select-box">
+          <select id="expiry-year"></select>
+          <span>年</span>
+        </label>
+        <label class="select-box">
+          <select id="expiry-month"></select>
+          <span>月</span>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>
+        診断書を医師に依頼してから受取まで<br />おおよそ何ヶ月かかりますか？
+      </h2>
+      <div class="selects">
+        <label class="select-box">
+          <select id="diagnosis-months"></select>
+          <span>ヶ月</span>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>障害年金を受給していますか？</h2>
+      <p class="caption small">
+        ※年金受給者証の写しで障害者手帳が更新できることがあります
+      </p>
+      <div class="radios">
+        <label><input type="radio" name="pension" value="yes" /> はい</label>
+        <label
+          ><input type="radio" name="pension" value="no" checked /> いいえ</label
+        >
+      </div>
+    </section>
+
+    <button class="btn-outline" id="submit-btn">決定</button>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+    text-align: center;
+  }
+  section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .caption {
+    margin: -0.5rem 0 0;
+    font-size: 0.9rem;
+  }
+  .caption.small {
+    font-size: 0.75rem;
+  }
+  .selects {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .select-box {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--color-white);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .select-box select {
+    appearance: none;
+    border: none;
+    outline: none;
+    background: transparent
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M0 0h10L5 7z' fill='%23cbcbcb'/%3E%3C/svg%3E")
+      no-repeat right center;
+    padding-right: 1rem;
+    font-family: inherit;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .select-box:focus-within {
+    outline: 2px solid var(--color-primary-dark);
+    outline-offset: 2px;
+  }
+  .radios {
+    display: flex;
+    gap: 2.5rem;
+    font-size: 1.5rem;
+  }
+  .radios label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  .radios input {
+    appearance: none;
+    width: 27px;
+    height: 27px;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--color-white);
+    cursor: pointer;
+  }
+  .radios input:checked {
+    background: radial-gradient(
+      circle,
+      var(--color-primary) 0 8px,
+      var(--color-white) 9px
+    );
+  }
+  .btn-outline {
+    min-width: 190px;
+  }
+</style>
+
+<script>
+  import { loadSettings, saveSettings } from "../lib/store";
+
+  const yearSelect = document.getElementById(
+    "expiry-year",
+  ) as unknown as HTMLSelectElement;
+  const monthSelect = document.getElementById(
+    "expiry-month",
+  ) as unknown as HTMLSelectElement;
+  const diagnosisSelect = document.getElementById(
+    "diagnosis-months",
+  ) as unknown as HTMLSelectElement;
+
+  for (const select of [yearSelect, monthSelect, diagnosisSelect]) {
+    const label = select.closest<HTMLLabelElement>(".select-box");
+    label?.addEventListener("click", (e) => {
+      if (e.target === select) return;
+      e.preventDefault();
+      select.focus();
+      select.showPicker?.();
+    });
+  }
+
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y <= currentYear + 10; y++) {
+    yearSelect.add(new Option(String(y), String(y)));
+  }
+  for (let m = 1; m <= 12; m++) {
+    monthSelect.add(new Option(String(m), String(m)));
+  }
+  for (let n = 1; n <= 6; n++) {
+    diagnosisSelect.add(new Option(String(n), String(n)));
+  }
+
+  const saved = loadSettings();
+  if (saved) {
+    yearSelect.value = String(saved.expiryYear);
+    monthSelect.value = String(saved.expiryMonth);
+    diagnosisSelect.value = String(saved.diagnosisMonths);
+    const pension = document.querySelector<HTMLInputElement>(
+      `input[name="pension"][value="${saved.hasPension ? "yes" : "no"}"]`,
+    );
+    if (pension) pension.checked = true;
+  }
+
+  document.getElementById("submit-btn")!.addEventListener("click", () => {
+    const pension = document.querySelector<HTMLInputElement>(
+      'input[name="pension"]:checked',
+    );
+    saveSettings({
+      expiryYear: Number(yearSelect.value),
+      expiryMonth: Number(monthSelect.value),
+      diagnosisMonths: Number(diagnosisSelect.value),
+      hasPension: pension?.value === "yes",
+    });
+    location.href = "/checklist";
+  });
+</script>

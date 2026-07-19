@@ -8,6 +8,7 @@ self.addEventListener('push', (event) => {
       body: data.body ?? '',
       icon: '/icons/icon-192.png',
       data: { url: data.url ?? '/' },
+      requireInteraction: true,
     }),
   );
 });

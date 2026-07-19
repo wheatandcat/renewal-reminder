@@ -44,3 +44,22 @@ console.log(JSON.stringify(await generateVapidKeys()));
 
 - `GET /api/debug/run-cron` : 本来Cron Triggerが行う送信処理を即時実行する検証用エンドポイント(認証なし、検証専用)
 - iOSはSafariで開いた後「ホーム画面に追加」してPWAとして起動しないと通知許可が出せない
+
+## ローカル環境のWeb Push通知の検証方法
+
+
+■ 登録しているscheduleを確認
+```sh
+$ npx wrangler d1 execute renewal-reminder-db --local --command "SELECT * FROM schedules Order By created_at DESC"
+```
+
+■ 登録しているscheduleを更新
+```sh
+$ npx wrangler d1 execute renewal-reminder-db --local --command \
+  "UPDATE schedules SET target_date = date('now','localtime'), sent_at = NULL WHERE id = <id>;"
+```
+
+■ デバッグ用のWeb Push通知を送信
+```sh
+$ curl -s http://localhost:4321/api/debug/run-cron
+```

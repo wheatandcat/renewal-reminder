@@ -1,0 +1,166 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ReminderPanel from "../features/checklist/ReminderPanel.astro";
+import Checklist from "../features/checklist/Checklist.astro";
+---
+
+<Layout title="更新チェックリスト - 精神障害者手帳 更新リマインダー">
+  <main>
+    <aside class="left">
+      <ReminderPanel />
+
+      <a class="toggle-link" href="/setup">▶ 設定を変更する</a>
+
+      <details class="tips">
+        <summary>Tips</summary>
+        <div class="tip-card">
+          <p>
+            Excel形式で申請書を書きたい方は、東京都福祉局のページ内「書面による通知サービスについて」の項目から<a
+              href="https://www.fukushi.metro.tokyo.lg.jp/documents/d/fukushi/syougaisyatechoshinsei_251219-xlsx-2"
+              target="_blank"
+              rel="noopener">(様式)障害者手帳申請書</a
+            >をDLできます。
+          </p>
+          <a
+            class="tip-link"
+            href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+            target="_blank"
+            rel="noopener"
+            >https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+          >
+        </div>
+        <div class="tip-card">
+          <p>
+            更新手続き開始1週間前に書面により通知するサービスがあります。更新申請の受付開始通知希望欄で「有」を選ぶと、更新受付開始の一週間前に郵送で通知と申請書が送られてきます。
+          </p>
+          <a
+            class="tip-link"
+            href="https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou"
+            target="_blank"
+            rel="noopener"
+            >https://www.fukushi.metro.tokyo.lg.jp/shougai/nichijo/seishintetyou/seishintetyou</a
+          >
+        </div>
+      </details>
+
+      <button
+        type="button"
+        class="btn-outline hidden"
+        id="checklist-install-btn"
+      >
+        ホーム画面に追加
+      </button>
+    </aside>
+
+    <Checklist />
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: minmax(280px, 400px) 1fr;
+    gap: 3rem;
+  }
+  @media (max-width: 800px) {
+    main {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* 左カラム */
+  .left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .toggle-link {
+    align-self: flex-start;
+    color: var(--color-white);
+    font-size: 1.25rem;
+    font-weight: 900;
+    text-decoration: none;
+  }
+  .tips {
+    align-self: flex-start;
+    width: 100%;
+  }
+  .tips summary {
+    color: var(--color-white);
+    font-size: 1.25rem;
+    font-weight: 900;
+    cursor: pointer;
+    list-style: none;
+  }
+  .tips summary::before {
+    content: "▶ ";
+    font-size: 1rem;
+  }
+  .tips[open] summary::before {
+    content: "▼ ";
+  }
+  .tip-card {
+    background: var(--color-white);
+    border-radius: 3px;
+    padding: 0.9rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .tip-card p {
+    margin: 0 0 0.5rem;
+  }
+  .tip-link {
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+
+  #checklist-install-btn {
+    align-self: flex-start;
+  }
+  .hidden {
+    display: none !important;
+  }
+
+  @media print {
+    .left {
+      display: none;
+    }
+    main {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  import { isAndroid, isStandalone } from "../lib/platform";
+
+  const installBtn = document.getElementById(
+    "checklist-install-btn",
+  ) as HTMLButtonElement;
+
+  // Androidでホーム画面経由(standalone)以外で開いた場合のみ表示
+  const needsInstallButton = isAndroid() && !isStandalone();
+
+  let deferredInstallPrompt: any = null;
+
+  if (needsInstallButton) {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      installBtn.classList.remove("hidden");
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.classList.add("hidden");
+    });
+  }
+</script>
