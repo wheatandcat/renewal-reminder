@@ -274,6 +274,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     saveCheck,
     renewalPlan,
   } from "../../lib/store";
+  import { downloadChecklistImage } from "../../lib/checklistImage";
 
   const settings = loadSettings();
   if (!settings) {
@@ -318,7 +319,24 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   document
     .getElementById("pdf-btn")!
     .addEventListener("click", () => window.print());
-  document
-    .getElementById("dl-image-btn")!
-    .addEventListener("click", () => alert("準備中です"));
+  const dlImageBtn = document.getElementById(
+    "dl-image-btn",
+  ) as HTMLButtonElement;
+  dlImageBtn.addEventListener("click", async () => {
+    const label = dlImageBtn.textContent;
+    dlImageBtn.disabled = true;
+    dlImageBtn.textContent = "作成中…";
+    try {
+      await downloadChecklistImage(
+        document.querySelector<HTMLElement>(".timeline")!,
+        settings,
+      );
+    } catch (err) {
+      console.error("download image error:", err);
+      alert("画像の作成に失敗しました");
+    } finally {
+      dlImageBtn.disabled = false;
+      dlImageBtn.textContent = label;
+    }
+  });
 </script>
