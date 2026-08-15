@@ -6,10 +6,45 @@
 </details>
 
 <script>
+  // 「？」の右側に表示する画面幅(801px以上)で、カードが右端からはみ出す場合に左へ寄せる。
+  // 狭い画面ではCSSだけで収まるようにしてあるため、ここでの補正は不要(shiftは0になる)。
+  const MARGIN = 8;
+
+  const fitInViewport = (pop: HTMLDetailsElement) => {
+    const card = pop.querySelector<HTMLElement>(".pop-card");
+    if (!card) return;
+
+    card.style.setProperty("--pop-shift", "0px");
+    // innerWidthは横スクロールやズームの影響を受けるためclientWidthを使う
+    const viewport = document.documentElement.clientWidth;
+    const rect = card.getBoundingClientRect();
+    let shift = 0;
+    if (rect.right > viewport - MARGIN) {
+      shift = viewport - MARGIN - rect.right;
+    }
+    if (rect.left + shift < MARGIN) {
+      shift = MARGIN - rect.left;
+    }
+    card.style.setProperty("--pop-shift", `${shift}px`);
+  };
+
+  const openPops = () =>
+    document.querySelectorAll<HTMLDetailsElement>("details.pop[open]");
+
+  for (const pop of document.querySelectorAll<HTMLDetailsElement>(
+    "details.pop",
+  )) {
+    pop.addEventListener("toggle", () => {
+      if (pop.open) fitInViewport(pop);
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    for (const pop of openPops()) fitInViewport(pop);
+  });
+
   document.addEventListener("click", (e) => {
-    for (const pop of document.querySelectorAll<HTMLDetailsElement>(
-      "details.pop[open]",
-    )) {
+    for (const pop of openPops()) {
       if (!pop.contains(e.target as Node)) {
         pop.open = false;
       }
@@ -20,7 +55,6 @@
 <style>
   /* ？ポップオーバー */
   .pop {
-    position: relative;
     margin-bottom: 0.9rem;
   }
   .pop summary {
@@ -37,16 +71,34 @@
     justify-content: center;
     cursor: pointer;
   }
+  /* 「？」を基準に絶対配置すると「？」が画面右寄りにある行ではカードがはみ出す。
+     既定では行(.check-row = position:relative)を基準に、行の幅いっぱいで真下に表示する。
+     ビューポート幅の計算やJSに依存しないので、どの端末でも必ず画面内に収まる。 */
   .pop-card {
     position: absolute;
     z-index: 10;
-    left: 30px;
-    top: -10px;
-    width: min(276px, 70vw);
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    max-width: 276px;
     background: var(--color-white);
     border-radius: 3px;
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
+  }
+  /* 横に並べても収まる幅では、従来どおり「？」の右側に表示する */
+  @media (min-width: 801px) {
+    .pop {
+      position: relative;
+    }
+    .pop-card {
+      left: 30px;
+      right: auto;
+      top: -10px;
+      width: 276px;
+      /* 右端からはみ出す分はスクリプトが --pop-shift に補正値を入れる */
+      transform: translateX(var(--pop-shift, 0px));
+    }
   }
   .pop-card :global(ul) {
     list-style: none;
