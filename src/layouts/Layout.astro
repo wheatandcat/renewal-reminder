@@ -44,6 +44,10 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
     --color-white: #fff;
     --color-checked: #5397bf; /* チェック済みテキスト */
     --color-disabled: #dad5d5; /* 無効化チェックボックス */
+    --color-print-line: #767676; /* 印刷時の枠線・線 */
+  }
+  @page {
+    margin: 10mm;
   }
   * {
     box-sizing: border-box;
@@ -85,5 +89,12 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
   .btn-outline:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      color: var(--color-text);
+    }
   }
 </style>

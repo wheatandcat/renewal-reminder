@@ -127,11 +127,20 @@ import Checklist from "../features/checklist/Checklist.astro";
   }
 
   @media print {
-    .left {
-      display: none;
-    }
     main {
       grid-template-columns: 1fr;
+      gap: 0;
+      padding: 0;
+    }
+    /* 有効期限・更新期間だけを見出しとして残す */
+    .left {
+      display: block;
+      margin-bottom: 1.25rem;
+    }
+    .toggle-link,
+    .tips,
+    #checklist-install-btn {
+      display: none;
     }
   }
 </style>
