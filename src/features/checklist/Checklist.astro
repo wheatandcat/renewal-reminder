@@ -6,13 +6,19 @@ import PensionCopyPop from "./PensionCopyPop.astro";
 
 <section class="timeline">
   <div class="badge-note hidden" id="badge-note">
-    <p>
+    <p id="badge-note-text">
       アイコンにお知らせマーク（●）を付けるには、通知を許可してください。
     </p>
-    <button type="button" class="badge-note-btn" id="badge-permission-btn">
+    <button
+      type="button"
+      class="badge-note-btn hidden"
+      id="badge-permission-btn"
+    >
       通知を許可する
     </button>
   </div>
+
+  <pre class="badge-debug hidden" id="badge-debug"></pre>
 
   <div class="year-pill" id="prepare-year"></div>
 
@@ -186,6 +192,21 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     font-weight: 900;
     padding: 0.4rem 1rem;
   }
+  /* 年の丸バッジを5回タップで表示する実機用の診断表示 */
+  .badge-debug {
+    position: relative;
+    z-index: 1;
+    left: -3.5rem;
+    width: calc(100% + 3.5rem);
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-white);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
   .year-pill {
     position: relative;
     left: -3.5rem;
@@ -305,7 +326,8 @@ import PensionCopyPop from "./PensionCopyPop.astro";
 
   @media print {
     .actions,
-    .badge-note {
+    .badge-note,
+    .badge-debug {
       display: none;
     }
 
@@ -397,7 +419,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   import {
     saveBadgeSnapshot,
     applyBadge,
-    hasPendingBadge,
+    pendingBadgeCount,
     todayYmJst,
     type BadgeSection,
   } from "../../lib/badge";
@@ -454,6 +476,22 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   } as const;
 
   const badgeNoteEl = document.getElementById("badge-note")!;
+  const badgeNoteTextEl = document.getElementById("badge-note-text")!;
+  const badgePermissionBtn = document.getElementById("badge-permission-btn")!;
+  const badgeDebugEl = document.getElementById("badge-debug")!;
+
+  const NOTE_TEXT = {
+    denied: "アイコンにお知らせマーク（●）を付けるには、通知を許可してください。",
+    unsupported:
+      "この開き方ではアイコンにお知らせマークを付けられません。ホーム画面に追加したアイコンから開いてください（iOSは16.4以降が必要です）。",
+    error: "アイコンのお知らせマークを更新できませんでした。",
+  } as const;
+
+  // 実機(iOS)ではコンソールが見られないため、年の丸バッジ5回タップで診断表示を出す
+  const DEBUG_KEY = "rr:debug";
+  let debugOn =
+    localStorage.getItem(DEBUG_KEY) === "1" ||
+    new URLSearchParams(location.search).has("debug");
 
   async function syncBadge() {
     const sections: BadgeSection[] = [];
@@ -471,27 +509,62 @@ import PensionCopyPop from "./PensionCopyPop.astro";
       });
     }
     await saveBadgeSnapshot(sections);
-    const result = await applyBadge(hasPendingBadge(sections, todayYmJst()));
-    // 通知未許可だとバッジAPIが拒否されるため、ホーム画面から開いている場合のみ案内を出す
-    badgeNoteEl.classList.toggle(
-      "hidden",
-      !(result === "denied" && isStandalone()),
-    );
+    const todayYm = todayYmJst();
+    const count = pendingBadgeCount(sections, todayYm);
+    const result = await applyBadge(count);
+
+    // バッジを反映できなかった理由を、ホーム画面から開いている場合に案内する
+    const showNote = result !== "ok" && isStandalone();
+    badgeNoteEl.classList.toggle("hidden", !showNote);
+    badgePermissionBtn.classList.toggle("hidden", result !== "denied");
+    if (showNote) badgeNoteTextEl.textContent = NOTE_TEXT[result];
+
+    renderDebug({ result, count, todayYm, sections });
+  }
+
+  function renderDebug(info: {
+    result: string;
+    count: number;
+    todayYm: string;
+    sections: BadgeSection[];
+  }) {
+    badgeDebugEl.classList.toggle("hidden", !debugOn);
+    if (!debugOn) return;
+    badgeDebugEl.textContent = [
+      `standalone: ${isStandalone()}`,
+      `Notification.permission: ${typeof Notification === "undefined" ? "なし" : Notification.permission}`,
+      `setAppBadge: ${typeof navigator.setAppBadge}`,
+      `serviceWorker: ${"serviceWorker" in navigator}`,
+      `today(JST): ${info.todayYm}`,
+      `badge: ${info.result} / count=${info.count}`,
+      `sections: ${info.sections.map((s) => `${s.ym}:${s.remaining}`).join(", ")}`,
+      `UA: ${navigator.userAgent}`,
+    ].join("\n");
   }
 
   const runSyncBadge = () =>
     syncBadge().catch((err) => console.error("syncBadge error:", err));
 
-  document
-    .getElementById("badge-permission-btn")!
-    .addEventListener("click", async () => {
-      try {
-        await Notification.requestPermission();
-      } catch (err) {
-        console.error("requestPermission error:", err);
-      }
-      await runSyncBadge();
-    });
+  badgePermissionBtn.addEventListener("click", async () => {
+    try {
+      await Notification.requestPermission();
+    } catch (err) {
+      console.error("requestPermission error:", err);
+    }
+    await runSyncBadge();
+  });
+
+  let debugTaps = 0;
+  let debugTapTimer: ReturnType<typeof setTimeout> | undefined;
+  document.getElementById("prepare-year")!.addEventListener("click", () => {
+    clearTimeout(debugTapTimer);
+    debugTapTimer = setTimeout(() => (debugTaps = 0), 1500);
+    if (++debugTaps < 5) return;
+    debugTaps = 0;
+    debugOn = !debugOn;
+    localStorage.setItem(DEBUG_KEY, debugOn ? "1" : "0");
+    runSyncBadge();
+  });
 
   runSyncBadge();
 

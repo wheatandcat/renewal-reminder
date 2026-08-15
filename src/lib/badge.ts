@@ -69,9 +69,9 @@ export function todayYmJst(): string {
 	return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
 }
 
-/** 対象月が到来しているステップに未チェックが残っていればバッジ表示 */
-export function hasPendingBadge(sections: BadgeSection[], todayYm: string): boolean {
-	return sections.some((s) => s.ym <= todayYm && s.remaining > 0);
+/** 対象月が到来しているステップの未チェック件数の合計(0ならバッジなし) */
+export function pendingBadgeCount(sections: BadgeSection[], todayYm: string): number {
+	return sections.reduce((sum, s) => (s.ym <= todayYm ? sum + s.remaining : sum), 0);
 }
 
 export type BadgeResult = 'ok' | 'unsupported' | 'denied' | 'error';
@@ -80,13 +80,15 @@ export type BadgeResult = 'ok' | 'unsupported' | 'denied' | 'error';
  * バッジを反映する。
  * iOSのBadging APIはホーム画面追加済み + 通知許可済みでないと拒否されるため、
  * 何が原因で反映できなかったかを呼び出し元へ返す(UIでの案内に使う)。
+ *
+ * 引数なしの setAppBadge() (●のみ) は環境によって描画されないため、必ず件数を渡す。
  */
-export async function applyBadge(show: boolean): Promise<BadgeResult> {
+export async function applyBadge(count: number): Promise<BadgeResult> {
 	if (typeof navigator.setAppBadge !== 'function') return 'unsupported';
 	if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return 'denied';
 	try {
-		if (show) {
-			await navigator.setAppBadge();
+		if (count > 0) {
+			await navigator.setAppBadge(count);
 		} else {
 			await navigator.clearAppBadge?.();
 		}

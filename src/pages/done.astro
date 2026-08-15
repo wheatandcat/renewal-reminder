@@ -54,7 +54,7 @@ import Layout from "../layouts/Layout.astro";
       await clearBadgeSnapshot().catch((err) =>
         console.error("clearBadgeSnapshot error:", err),
       );
-      await applyBadge(false);
+      await applyBadge(0);
       location.href = "/setup";
     });
 </script>
