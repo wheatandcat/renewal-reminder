@@ -7,7 +7,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
 <section class="timeline">
   <div class="year-pill" id="prepare-year"></div>
 
-  <div class="step">
+  <div class="step" data-section="prepare">
     <div class="marker">
       <span class="num" id="prepare-month"></span><span class="unit">月</span>
     </div>
@@ -67,7 +67,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     </div>
   </div>
 
-  <div class="step">
+  <div class="step" data-section="start">
     <div class="marker">
       <span class="num" id="start-month2"></span><span class="unit">月</span>
     </div>
@@ -89,7 +89,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
 
   <div class="year-pill" id="receive-year"></div>
 
-  <div class="step">
+  <div class="step" data-section="receive">
     <div class="marker">
       <span class="num" id="receive-month"></span><span class="unit">月</span>
     </div>
@@ -352,6 +352,13 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     saveCheck,
     renewalPlan,
   } from "../../lib/store";
+  import {
+    saveBadgeSnapshot,
+    applyBadge,
+    hasPendingBadge,
+    todayYmJst,
+    type BadgeSection,
+  } from "../../lib/badge";
   import { downloadChecklistImage } from "../../lib/checklistImage";
 
   const settings = loadSettings();
@@ -378,8 +385,9 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   )) {
     const id = input.dataset.check!;
     input.checked = checks[id] === true;
-    input.addEventListener("change", () => {
+    input.addEventListener("change", async () => {
       saveCheck(id, input.checked);
+      await syncBadge();
       if (id === "recv-final" && input.checked) {
         location.href = "/done";
       }
@@ -393,6 +401,35 @@ import PensionCopyPop from "./PensionCopyPop.astro";
       label.querySelector("input")!.disabled = true;
     }
   }
+
+  // 対象月が到来しているステップに未チェックが残っていればアイコンにバッジを出す。
+  // SW(push受信時)から同じ判定ができるようスナップショットをIndexedDBへ保存する。
+  const SECTION_MONTHS = {
+    prepare: plan.prepare,
+    start: plan.start,
+    receive: plan.receive,
+  } as const;
+
+  async function syncBadge() {
+    const sections: BadgeSection[] = [];
+    for (const step of document.querySelectorAll<HTMLElement>(
+      ".step[data-section]",
+    )) {
+      const ym = SECTION_MONTHS[step.dataset.section as keyof typeof SECTION_MONTHS];
+      if (!ym) continue;
+      const inputs = step.querySelectorAll<HTMLInputElement>(
+        "input[data-check]:not(:disabled)",
+      );
+      sections.push({
+        ym: `${ym.year}-${String(ym.month).padStart(2, "0")}`,
+        remaining: [...inputs].filter((i) => !i.checked).length,
+      });
+    }
+    await saveBadgeSnapshot(sections);
+    await applyBadge(hasPendingBadge(sections, todayYmJst()));
+  }
+
+  syncBadge().catch((err) => console.error("syncBadge error:", err));
 
   document
     .getElementById("pdf-btn")!

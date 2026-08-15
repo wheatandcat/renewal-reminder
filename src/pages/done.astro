@@ -45,9 +45,16 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   import { clearChecks } from "../lib/store";
+  import { clearBadgeSnapshot, applyBadge } from "../lib/badge";
 
-  document.getElementById("next-btn")!.addEventListener("click", () => {
-    clearChecks();
-    location.href = "/setup";
-  });
+  document
+    .getElementById("next-btn")!
+    .addEventListener("click", async () => {
+      clearChecks();
+      await clearBadgeSnapshot().catch((err) =>
+        console.error("clearBadgeSnapshot error:", err),
+      );
+      await applyBadge(false);
+      location.href = "/setup";
+    });
 </script>

@@ -31,6 +31,15 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
   </head>
   <body>
     <slot />
+
+    <script>
+      // push受信時のバッジ更新はSWに依存するため、全ページで登録しておく
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .catch((err) => console.error("sw register error:", err));
+      }
+    </script>
   </body>
 </html>
 
