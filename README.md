@@ -1,20 +1,21 @@
-# Renewal Reminder
+# 手帳更新通知サービス
 
-Web Push通知の検証用サイト。日付を選ぶと、その日の朝8:00(JST)にWeb Push通知が届く。PC/Android/iOS(PWA化)での動作検証を目的とする。
+■ URL
+https://renewal-reminder.com
 
-- フレームワーク: Astro + `@astrojs/cloudflare`
-- ホスティング: Cloudflare Workers
-- ストレージ: Cloudflare D1
-- Push送信: `@mmmike/web-push` によるVAPID + aes128gcm自前実装(FCM/APNsの外部サービス連携なし)
-- スケジューリング: Cloudflare Cron Trigger(毎日 `0 23 * * *` UTC = 8:00 JST)
+
+![スクリーンショット](./docs/checklist_.png)
+
+ - PWAで実装
+ - Web Pushで通知
 
 ## セットアップ
 
 ```sh
 npm install
 npx wrangler login
-npx wrangler d1 create renewal-reminder-db   # 出力された database_id を wrangler.jsonc に反映
-npm run generate-types                        # worker-configuration.d.ts を生成(gitignore対象)
+npx wrangler d1 create renewal-reminder-db
+npm run generate-types
 npx wrangler d1 migrations apply renewal-reminder-db --local
 npx wrangler d1 migrations apply renewal-reminder-db --remote
 ```

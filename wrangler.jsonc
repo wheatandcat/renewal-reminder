@@ -4,6 +4,10 @@
 	"compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
 	"name": "renewal-reminder",
 	"main": "./src/worker.ts",
+	"routes": [
+		{ "pattern": "renewal-reminder.com", "custom_domain": true },
+		{ "pattern": "www.renewal-reminder.com", "custom_domain": true }
+	],
 	"assets": {
 		"directory": "./dist",
 		"binding": "ASSETS"
