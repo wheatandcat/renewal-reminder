@@ -37,9 +37,13 @@ async function updateBadgeFromIdb() {
     // まだ /checklist を開いていない場合は判定材料がないので何もしない
     if (!snapshot?.sections) return;
     const todayYm = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
-    const pending = snapshot.sections.some((s) => s.ym <= todayYm && s.remaining > 0);
-    if (pending) {
-      await self.navigator.setAppBadge?.();
+    // 引数なしの setAppBadge() は環境によって描画されないため件数を渡す(src/lib/badge.ts と同じ)
+    const count = snapshot.sections.reduce(
+      (sum, s) => (s.ym <= todayYm ? sum + s.remaining : sum),
+      0,
+    );
+    if (count > 0) {
+      await self.navigator.setAppBadge?.(count);
     } else {
       await self.navigator.clearAppBadge?.();
     }
