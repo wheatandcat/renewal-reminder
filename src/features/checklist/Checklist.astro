@@ -5,6 +5,15 @@ import PensionCopyPop from "./PensionCopyPop.astro";
 ---
 
 <section class="timeline">
+  <div class="badge-note hidden" id="badge-note">
+    <p>
+      アイコンにお知らせマーク（●）を付けるには、通知を許可してください。
+    </p>
+    <button type="button" class="badge-note-btn" id="badge-permission-btn">
+      通知を許可する
+    </button>
+  </div>
+
   <div class="year-pill" id="prepare-year"></div>
 
   <div class="step" data-section="prepare">
@@ -145,6 +154,38 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     background: var(--color-white);
     border-radius: 2px;
   }
+  .hidden {
+    display: none !important;
+  }
+  /* バッジ(●)を出すための通知許可の案内。タイムラインの線に重ねて表示する */
+  .badge-note {
+    position: relative;
+    z-index: 1;
+    left: -3.5rem;
+    width: calc(100% + 3.5rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background: var(--color-white);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+  .badge-note p {
+    margin: 0;
+  }
+  .badge-note-btn {
+    border: none;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: 0.85rem;
+    font-weight: 900;
+    padding: 0.4rem 1rem;
+  }
   .year-pill {
     position: relative;
     left: -3.5rem;
@@ -263,7 +304,8 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   }
 
   @media print {
-    .actions {
+    .actions,
+    .badge-note {
       display: none;
     }
 
@@ -360,6 +402,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     type BadgeSection,
   } from "../../lib/badge";
   import { downloadChecklistImage } from "../../lib/checklistImage";
+  import { isStandalone } from "../../lib/platform";
 
   const settings = loadSettings();
   if (!settings) {
@@ -410,6 +453,8 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     receive: plan.receive,
   } as const;
 
+  const badgeNoteEl = document.getElementById("badge-note")!;
+
   async function syncBadge() {
     const sections: BadgeSection[] = [];
     for (const step of document.querySelectorAll<HTMLElement>(
@@ -426,10 +471,37 @@ import PensionCopyPop from "./PensionCopyPop.astro";
       });
     }
     await saveBadgeSnapshot(sections);
-    await applyBadge(hasPendingBadge(sections, todayYmJst()));
+    const result = await applyBadge(hasPendingBadge(sections, todayYmJst()));
+    // 通知未許可だとバッジAPIが拒否されるため、ホーム画面から開いている場合のみ案内を出す
+    badgeNoteEl.classList.toggle(
+      "hidden",
+      !(result === "denied" && isStandalone()),
+    );
   }
 
-  syncBadge().catch((err) => console.error("syncBadge error:", err));
+  const runSyncBadge = () =>
+    syncBadge().catch((err) => console.error("syncBadge error:", err));
+
+  document
+    .getElementById("badge-permission-btn")!
+    .addEventListener("click", async () => {
+      try {
+        await Notification.requestPermission();
+      } catch (err) {
+        console.error("requestPermission error:", err);
+      }
+      await runSyncBadge();
+    });
+
+  runSyncBadge();
+
+  // 月をまたいだ後にアプリへ復帰した場合も判定し直す
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") runSyncBadge();
+  });
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) runSyncBadge();
+  });
 
   document
     .getElementById("pdf-btn")!

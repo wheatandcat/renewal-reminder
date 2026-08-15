@@ -74,15 +74,25 @@ export function hasPendingBadge(sections: BadgeSection[], todayYm: string): bool
 	return sections.some((s) => s.ym <= todayYm && s.remaining > 0);
 }
 
-/** 非対応環境(未インストール・通知未許可など)では黙って何もしない */
-export async function applyBadge(show: boolean): Promise<void> {
+export type BadgeResult = 'ok' | 'unsupported' | 'denied' | 'error';
+
+/**
+ * バッジを反映する。
+ * iOSのBadging APIはホーム画面追加済み + 通知許可済みでないと拒否されるため、
+ * 何が原因で反映できなかったかを呼び出し元へ返す(UIでの案内に使う)。
+ */
+export async function applyBadge(show: boolean): Promise<BadgeResult> {
+	if (typeof navigator.setAppBadge !== 'function') return 'unsupported';
+	if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return 'denied';
 	try {
 		if (show) {
-			await navigator.setAppBadge?.();
+			await navigator.setAppBadge();
 		} else {
 			await navigator.clearAppBadge?.();
 		}
+		return 'ok';
 	} catch (err) {
 		console.error('badge update error:', err);
+		return 'error';
 	}
 }

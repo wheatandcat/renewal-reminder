@@ -205,6 +205,14 @@ const isDev = import.meta.env.DEV;
     return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   }
 
+  // 日次cronは 08:00 JST に当日分を送るため、当日を指定すると取りこぼす可能性がある。
+  // 過去日になった分は翌日に寄せる。
+  function tomorrowJst(): string {
+    return new Date(Date.now() + (24 + 9) * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+  }
+
   const statusEl = document.getElementById("status")!;
 
   async function renderSchedules() {
@@ -270,13 +278,21 @@ const isDev = import.meta.env.DEV;
             return;
           }
           await navigator.serviceWorker.register("/sw.js");
-          // 準備開始月と更新開始月の1日に通知(過去日は除外)
-          const targetDates = (
-            [
-              { targetDate: ymToDateString(plan.prepare), type: "prepare" as const },
-              { targetDate: ymToDateString(plan.start), type: "start" as const },
-            ]
-          ).filter((s) => s.targetDate >= todayJst());
+          // 準備開始月と更新開始月の1日に通知。
+          // 対象月に入ってから設定した場合は1日が過去になるので翌日に寄せる
+          // (対象月そのものが過ぎている分だけ除外)
+          const today = todayJst();
+          const currentYm = today.slice(0, 7);
+          const targetDates = [
+            { targetDate: ymToDateString(plan.prepare), type: "prepare" as const },
+            { targetDate: ymToDateString(plan.start), type: "start" as const },
+          ]
+            .filter((s) => s.targetDate.slice(0, 7) >= currentYm)
+            .map((s) => ({
+              ...s,
+              targetDate:
+                s.targetDate < today ? tomorrowJst() : s.targetDate,
+            }));
           if (targetDates.length === 0) {
             statusEl.textContent = "通知対象の日付が過去のため予約できません";
             return;
