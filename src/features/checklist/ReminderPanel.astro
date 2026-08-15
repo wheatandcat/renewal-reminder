@@ -321,12 +321,7 @@ const isDev = import.meta.env.DEV;
         }
       });
 
-    // 既存の予約表示とSW登録は失敗してもボタン操作を妨げない
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .catch((err) => console.error("sw register error:", err));
-    }
+    // SW登録は Layout.astro で全ページ共通に行う
     renderSchedules().catch((err) =>
       console.error("renderSchedules error:", err),
     );
