@@ -137,6 +137,41 @@ const isDev = import.meta.env.DEV;
     font-weight: 700;
     padding: 0.2rem 0.6rem;
   }
+
+  /* 印刷では有効期限と更新期間だけを1行の見出しとして表示する */
+  @media print {
+    .ios-note,
+    .remind {
+      display: none !important;
+    }
+    .expiry {
+      margin-bottom: 0.3rem;
+      font-size: 1.1rem;
+    }
+    .cloud {
+      width: auto;
+      max-width: none;
+      aspect-ratio: auto;
+      background: none;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: flex-start;
+      gap: 0.4rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1.5px solid var(--color-print-line);
+      text-align: left;
+    }
+    .cloud-title {
+      margin-bottom: 0 !important;
+      font-size: 1.1rem;
+    }
+    .cloud-period,
+    .cloud-period .num,
+    .cloud-period + .cloud-period .num {
+      color: var(--color-text);
+      font-size: 1.1rem;
+    }
+  }
 </style>
 
 <script>
