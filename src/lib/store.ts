@@ -49,7 +49,7 @@ export function addMonths(ym: YearMonth, delta: number): YearMonth {
 
 // 更新期間: 有効期限月の2ヶ月前 〜 1ヶ月後(東京都の基準)
 // 準備開始: 更新期間開始月から診断書の所要月数をさかのぼった月
-// 受け取り: 更新期間終了月から約3ヶ月後
+// 受け取り: 窓口で申請をする月(更新期間開始月)から約3ヶ月後
 export function renewalPlan(settings: Settings): {
 	start: YearMonth;
 	end: YearMonth;
@@ -63,7 +63,7 @@ export function renewalPlan(settings: Settings): {
 		start,
 		end,
 		prepare: addMonths(start, -settings.diagnosisMonths),
-		receive: addMonths(end, 3),
+		receive: addMonths(start, 3),
 	};
 }
 
