@@ -22,6 +22,17 @@ import Layout from "../layouts/Layout.astro";
       </p>
     </section>
 
+    <section id="chrome-note" class="hidden ios-note">
+      <p>
+        Androidでは Chrome
+        以外のブラウザからホーム画面に追加すると、通知が正しく動作しません。<br />
+        下のボタンからChromeで開き直してご利用ください。
+      </p>
+    </section>
+    <a class="btn-outline hidden" id="open-chrome-btn" href="#">
+      Chromeで開く
+    </a>
+
     <button type="button" class="btn-outline hidden" id="install-btn">
       ホーム画面に追加
     </button>
@@ -97,7 +108,13 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   import { loadSettings } from "../lib/store";
-  import { isAndroid, isIos, isStandalone } from "../lib/platform";
+  import {
+    isAndroid,
+    isIos,
+    isStandalone,
+    isAndroidChrome,
+    chromeIntentUrl,
+  } from "../lib/platform";
 
   const ios = isIos();
   const standalone = isStandalone();
@@ -108,6 +125,10 @@ import Layout from "../layouts/Layout.astro";
     "install-btn",
   ) as HTMLButtonElement;
   const installGuideEl = document.getElementById("install-guide")!;
+  const chromeNoteEl = document.getElementById("chrome-note")!;
+  const openChromeBtn = document.getElementById(
+    "open-chrome-btn",
+  ) as HTMLAnchorElement;
 
   // iOSはホーム画面に追加(standalone)しないとWeb Pushを受け取れない
   const iosNeedsHomeScreen = ios && !standalone;
@@ -129,16 +150,27 @@ import Layout from "../layouts/Layout.astro";
     }
   });
 
-  // ホーム画面追加ボタン: Android/iOSのブラウザ表示時のみ表示
   let deferredInstallPrompt: any = null;
-  if ((isAndroid() || ios) && !standalone) {
-    installBtn.classList.remove("hidden");
-  }
-
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
   });
+
+  // ホーム画面追加ボタン: Android/iOSのブラウザ表示時のみ表示
+  // ただしAndroidはChrome以外だとPWAが正しく動作しないため、Chromeへ誘導する
+  if (!standalone) {
+    if (isAndroid()) {
+      if (await isAndroidChrome()) {
+        installBtn.classList.remove("hidden");
+      } else {
+        openChromeBtn.href = chromeIntentUrl();
+        chromeNoteEl.classList.remove("hidden");
+        openChromeBtn.classList.remove("hidden");
+      }
+    } else if (ios) {
+      installBtn.classList.remove("hidden");
+    }
+  }
 
   installBtn.addEventListener("click", async () => {
     if (deferredInstallPrompt) {

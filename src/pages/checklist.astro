@@ -50,6 +50,9 @@ import Checklist from "../features/checklist/Checklist.astro";
       >
         ホーム画面に追加
       </button>
+      <a class="btn-outline hidden" id="checklist-open-chrome-btn" href="#">
+        Chromeで開く
+      </a>
     </aside>
 
     <Checklist />
@@ -119,7 +122,8 @@ import Checklist from "../features/checklist/Checklist.astro";
     word-break: break-all;
   }
 
-  #checklist-install-btn {
+  #checklist-install-btn,
+  #checklist-open-chrome-btn {
     align-self: flex-start;
   }
   .hidden {
@@ -139,37 +143,58 @@ import Checklist from "../features/checklist/Checklist.astro";
     }
     .toggle-link,
     .tips,
-    #checklist-install-btn {
+    #checklist-install-btn,
+    #checklist-open-chrome-btn {
       display: none;
     }
   }
 </style>
 
 <script>
-  import { isAndroid, isStandalone } from "../lib/platform";
+  import {
+    isAndroid,
+    isStandalone,
+    isAndroidChrome,
+    chromeIntentUrl,
+  } from "../lib/platform";
 
   const installBtn = document.getElementById(
     "checklist-install-btn",
   ) as HTMLButtonElement;
+  const openChromeBtn = document.getElementById(
+    "checklist-open-chrome-btn",
+  ) as HTMLAnchorElement;
 
   // Androidでホーム画面経由(standalone)以外で開いた場合のみ表示
   const needsInstallButton = isAndroid() && !isStandalone();
 
   let deferredInstallPrompt: any = null;
+  let installable = false;
+
+  // beforeinstallpromptを取り逃さないよう、判定より先に登録しておく
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (installable) installBtn.classList.remove("hidden");
+  });
 
   if (needsInstallButton) {
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      installBtn.classList.remove("hidden");
-    });
+    // Chrome以外のブラウザからホーム画面に追加してもPWAが正しく動作しないため、
+    // インストール導線は出さずChromeで開き直してもらう
+    if (await isAndroidChrome()) {
+      installable = true;
+      if (deferredInstallPrompt) installBtn.classList.remove("hidden");
 
-    installBtn.addEventListener("click", async () => {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      installBtn.classList.add("hidden");
-    });
+      installBtn.addEventListener("click", async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        installBtn.classList.add("hidden");
+      });
+    } else {
+      openChromeBtn.href = chromeIntentUrl();
+      openChromeBtn.classList.remove("hidden");
+    }
   }
 </script>

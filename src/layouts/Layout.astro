@@ -101,7 +101,17 @@ const { title = "精神障害者手帳 更新リマインダー" } = Astro.props
   }
 
   @media print {
+    /* iOSは印刷時も「画面の表示幅」でレイアウトしてから紙幅へ拡大するため、
+       スマホだと1行の文字数が減って縦に伸び、複数ページになる。
+       印刷時のレイアウト幅を紙の印刷可能幅(A4 210mm - @pageの余白20mm)で
+       固定して、端末によらず同じ組版になるようにする */
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
     body {
+      width: 190mm;
+      margin: 0 auto;
       background: #fff;
       color: var(--color-text);
     }
