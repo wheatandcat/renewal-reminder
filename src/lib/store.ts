@@ -47,7 +47,7 @@ export function addMonths(ym: YearMonth, delta: number): YearMonth {
 	return { year: Math.floor(index / 12), month: (index % 12) + 1 };
 }
 
-// 更新期間: 有効期限月の2ヶ月前 〜 1ヶ月後(東京都の基準)
+// 更新期間: 有効期限月の2ヶ月前 〜 有効期限月(東京都の基準)
 // 準備開始: 更新期間開始月から診断書の所要月数をさかのぼった月
 // 受け取り: 窓口で申請をする月(更新期間開始月)から約3ヶ月後
 export function renewalPlan(settings: Settings): {
@@ -58,7 +58,7 @@ export function renewalPlan(settings: Settings): {
 } {
 	const expiry = { year: settings.expiryYear, month: settings.expiryMonth };
 	const start = addMonths(expiry, -2);
-	const end = addMonths(expiry, 1);
+	const end = expiry;
 	return {
 		start,
 		end,

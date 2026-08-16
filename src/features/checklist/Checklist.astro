@@ -420,11 +420,12 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     saveBadgeSnapshot,
     applyBadge,
     pendingBadgeCount,
+    countNotifications,
     todayYmJst,
     type BadgeSection,
   } from "../../lib/badge";
   import { downloadChecklistImage } from "../../lib/checklistImage";
-  import { isStandalone } from "../../lib/platform";
+  import { isAndroid, isStandalone } from "../../lib/platform";
 
   const settings = loadSettings();
   if (!settings) {
@@ -440,8 +441,13 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   setText("prepare-year", plan.prepare.year);
   setText("prepare-month", plan.prepare.month);
   setText("start-month2", plan.start.month);
-  setText("receive-year", plan.receive.year);
   setText("receive-month", plan.receive.month);
+
+  // 受け取りの年は、年をまたぐときだけ表示する
+  const receiveYearEl = document.getElementById("receive-year")!;
+  const crossesYear = plan.receive.year !== plan.start.year;
+  receiveYearEl.textContent = crossesYear ? String(plan.receive.year) : "";
+  receiveYearEl.classList.toggle("hidden", !crossesYear);
 
   // チェックリスト(ローカル保存のみ)
   const checks = loadChecks();
@@ -513,16 +519,21 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     const count = pendingBadgeCount(sections, todayYm);
     const result = await applyBadge(count);
 
-    // バッジを反映できなかった理由を、ホーム画面から開いている場合に案内する
-    const showNote = result !== "ok" && isStandalone();
+    // バッジを反映できなかった理由を、ホーム画面から開いている場合に案内する。
+    // ただしAndroidはBadging API非対応(常にunsupported)で、代わりに未読通知があれば
+    // OSがアイコンにドットを出すため、案内は不要
+    const showNote =
+      result !== "ok" &&
+      isStandalone() &&
+      !(result === "unsupported" && isAndroid());
     badgeNoteEl.classList.toggle("hidden", !showNote);
     badgePermissionBtn.classList.toggle("hidden", result !== "denied");
     if (showNote) badgeNoteTextEl.textContent = NOTE_TEXT[result];
 
-    renderDebug({ result, count, todayYm, sections });
+    await renderDebug({ result, count, todayYm, sections });
   }
 
-  function renderDebug(info: {
+  async function renderDebug(info: {
     result: string;
     count: number;
     todayYm: string;
@@ -530,6 +541,7 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   }) {
     badgeDebugEl.classList.toggle("hidden", !debugOn);
     if (!debugOn) return;
+    const notifications = await countNotifications();
     badgeDebugEl.textContent = [
       `standalone: ${isStandalone()}`,
       `Notification.permission: ${typeof Notification === "undefined" ? "なし" : Notification.permission}`,
@@ -537,6 +549,8 @@ import PensionCopyPop from "./PensionCopyPop.astro";
       `serviceWorker: ${"serviceWorker" in navigator}`,
       `today(JST): ${info.todayYm}`,
       `badge: ${info.result} / count=${info.count}`,
+      // Androidのドットは未読通知の有無で決まるので、残っている通知数も出す
+      `notifications: ${notifications}`,
       `sections: ${info.sections.map((s) => `${s.ym}:${s.remaining}`).join(", ")}`,
       `UA: ${navigator.userAgent}`,
     ].join("\n");

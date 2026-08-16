@@ -145,6 +145,13 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   import { loadSettings, saveSettings } from "../lib/store";
+  import { isAndroid, isIos, isStandalone } from "../lib/platform";
+
+  // スマホはホーム画面(アプリ)から起動しないとWeb Pushを受け取れないため、
+  // ブラウザ表示のままでは設定させずトップの案内へ戻す
+  if ((isIos() || isAndroid()) && !isStandalone()) {
+    location.replace("/");
+  }
 
   const yearSelect = document.getElementById(
     "expiry-year",

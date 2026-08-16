@@ -4,9 +4,18 @@
 // バッジ判定に必要な最小限のスナップショットをIndexedDBに書き出しておき、
 // push受信時にSW側(public/sw.js)から同じ内容を読んで判定する。
 // DB名 / ストア名 / キーは public/sw.js と揃えること。
+import { isStandalone } from './platform';
+
 const DB_NAME = 'rr';
 const STORE_NAME = 'kv';
 const BADGE_KEY = 'badge';
+
+/** push通知に付けるtag。同じtagの通知は積み重ならず置き換わる。public/sw.js と揃えること */
+export const NOTIFICATION_TAG = 'renewal-reminder';
+
+/** ドット維持のために貼り直す通知の文言。public/sw.js と揃えること */
+const KEEP_ALIVE_TITLE = '更新の手続きが残っています';
+const KEEP_ALIVE_BODY = 'チェックリストの続きを確認してください';
 
 export type BadgeSection = {
 	/** 'YYYY-MM' 形式。チェックリストの各ステップの対象月 */
@@ -74,6 +83,65 @@ export function pendingBadgeCount(sections: BadgeSection[], todayYm: string): nu
 	return sections.reduce((sum, s) => (s.ym <= todayYm ? sum + s.remaining : sum), 0);
 }
 
+/**
+ * このアプリが出した通知をすべて閉じる。
+ *
+ * AndroidはBadging API非対応で、代わりに「未読の通知が残っているか」でOSがアイコンに
+ * ドットを付ける。そのため未チェックが0になったら通知を閉じないとドットが残り続ける。
+ */
+export async function closeNotifications(): Promise<void> {
+	if (!('serviceWorker' in navigator)) return;
+	try {
+		// ready はSW未登録だと解決しないため getRegistration を使う
+		const registration = await navigator.serviceWorker.getRegistration();
+		if (!registration) return;
+		const notifications = await registration.getNotifications();
+		for (const notification of notifications) notification.close();
+	} catch (err) {
+		console.error('close notifications error:', err);
+	}
+}
+
+/**
+ * ドット維持用の通知が残っていなければ貼り直す。
+ *
+ * Androidは通知をタップするとその通知が閉じられるため、未チェックが残っていても
+ * アイコンのドットが消えてしまう。Badging API非対応環境ではドットの根拠が通知しかないので、
+ * 残件がある間は無音の通知を出し直してドットを保つ。
+ */
+export async function ensureBadgeNotification(): Promise<void> {
+	if (!('serviceWorker' in navigator)) return;
+	if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+	try {
+		const registration = await navigator.serviceWorker.getRegistration();
+		if (!registration) return;
+		// 既に通知が残っていれば何もしない(貼り直すとトレイでの並び順が変わるため)
+		const existing = await registration.getNotifications({ tag: NOTIFICATION_TAG });
+		if (existing.length > 0) return;
+		await registration.showNotification(KEEP_ALIVE_TITLE, {
+			body: KEEP_ALIVE_BODY,
+			icon: '/icons/icon-192.png',
+			data: { url: '/checklist' },
+			tag: NOTIFICATION_TAG,
+			silent: true,
+		});
+	} catch (err) {
+		console.error('keep-alive notification error:', err);
+	}
+}
+
+/** このアプリが出している通知の件数(実機でドットの有無を診断するために使う) */
+export async function countNotifications(): Promise<number> {
+	if (!('serviceWorker' in navigator)) return 0;
+	try {
+		const registration = await navigator.serviceWorker.getRegistration();
+		if (!registration) return 0;
+		return (await registration.getNotifications()).length;
+	} catch {
+		return 0;
+	}
+}
+
 export type BadgeResult = 'ok' | 'unsupported' | 'denied' | 'error';
 
 /**
@@ -84,7 +152,14 @@ export type BadgeResult = 'ok' | 'unsupported' | 'denied' | 'error';
  * 引数なしの setAppBadge() (●のみ) は環境によって描画されないため、必ず件数を渡す。
  */
 export async function applyBadge(count: number): Promise<BadgeResult> {
-	if (typeof navigator.setAppBadge !== 'function') return 'unsupported';
+	// Androidのドットは通知の有無で決まるので、Badging APIの対応可否に関わらず先に消す
+	if (count === 0) await closeNotifications();
+	if (typeof navigator.setAppBadge !== 'function') {
+		// Badging API非対応(Android)ではドット = 未読通知。残件がある間は通知を貼り直して維持する。
+		// ブラウザのタブで開いているときは通知トレイを汚すだけなので、ホーム画面から開いた場合のみ
+		if (count > 0 && isStandalone()) await ensureBadgeNotification();
+		return 'unsupported';
+	}
 	if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return 'denied';
 	try {
 		if (count > 0) {
