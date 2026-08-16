@@ -43,9 +43,3 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   return new Response(JSON.stringify({ ok: true }));
 };
-
-export const DELETE: APIRoute = async ({ request }) => {
-  const { endpoint } = await request.json<{ endpoint: string }>();
-  await env.DB.prepare('DELETE FROM subscriptions WHERE endpoint = ?').bind(endpoint).run();
-  return new Response(JSON.stringify({ ok: true }));
-};

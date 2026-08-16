@@ -42,7 +42,7 @@ export function clearChecks(): void {
 	localStorage.removeItem(CHECKS_KEY);
 }
 
-export function addMonths(ym: YearMonth, delta: number): YearMonth {
+function addMonths(ym: YearMonth, delta: number): YearMonth {
 	const index = ym.year * 12 + (ym.month - 1) + delta;
 	return { year: Math.floor(index / 12), month: (index % 12) + 1 };
 }

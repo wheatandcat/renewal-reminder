@@ -12,7 +12,7 @@ const BADGE_KEY = 'badge';
 const BADGE_DEBUG_KEY = 'badgeDebug';
 
 /** push通知に付けるtag。同じtagの通知は積み重ならず置き換わる。public/sw.js と揃えること */
-export const NOTIFICATION_TAG = 'renewal-reminder';
+const NOTIFICATION_TAG = 'renewal-reminder';
 
 /** ドット維持のために貼り直す通知の文言。public/sw.js と揃えること */
 const KEEP_ALIVE_TITLE = '更新の手続きが残っています';
@@ -25,7 +25,7 @@ export type BadgeSection = {
 	remaining: number;
 };
 
-export type BadgeSnapshot = {
+type BadgeSnapshot = {
 	sections: BadgeSection[];
 	updatedAt: string;
 	/**
@@ -63,22 +63,20 @@ function openDb(): Promise<IDBDatabase> {
 	});
 }
 
-function withStore(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => void): Promise<void> {
-	return openDb().then(
-		(db) =>
-			new Promise<void>((resolve, reject) => {
-				const tx = db.transaction(STORE_NAME, mode);
-				fn(tx.objectStore(STORE_NAME));
-				tx.oncomplete = () => {
-					db.close();
-					resolve();
-				};
-				tx.onerror = () => {
-					db.close();
-					reject(tx.error);
-				};
-			}),
-	);
+async function withStore(fn: (store: IDBObjectStore) => void): Promise<void> {
+	const db = await openDb();
+	return new Promise<void>((resolve, reject) => {
+		const tx = db.transaction(STORE_NAME, 'readwrite');
+		fn(tx.objectStore(STORE_NAME));
+		tx.oncomplete = () => {
+			db.close();
+			resolve();
+		};
+		tx.onerror = () => {
+			db.close();
+			reject(tx.error);
+		};
+	});
 }
 
 export async function saveBadgeSnapshot(sections: BadgeSection[]): Promise<void> {
@@ -88,7 +86,7 @@ export async function saveBadgeSnapshot(sections: BadgeSection[]): Promise<void>
 		keepAlive: isAndroid(),
 		badgeApi: typeof navigator.setAppBadge === 'function',
 	};
-	await withStore('readwrite', (store) => {
+	await withStore((store) => {
 		store.put(snapshot, BADGE_KEY);
 	});
 }
@@ -114,7 +112,7 @@ export async function readBadgeSwLog(): Promise<BadgeSwLog | null> {
 }
 
 export async function clearBadgeSnapshot(): Promise<void> {
-	await withStore('readwrite', (store) => {
+	await withStore((store) => {
 		store.delete(BADGE_KEY);
 	});
 }
@@ -135,7 +133,7 @@ export function pendingBadgeCount(sections: BadgeSection[], todayYm: string): nu
  * AndroidはBadging API非対応で、代わりに「未読の通知が残っているか」でOSがアイコンに
  * ドットを付ける。そのため未チェックが0になったら通知を閉じないとドットが残り続ける。
  */
-export async function closeNotifications(): Promise<void> {
+async function closeNotifications(): Promise<void> {
 	if (!('serviceWorker' in navigator)) return;
 	try {
 		// ready はSW未登録だと解決しないため getRegistration を使う
@@ -155,7 +153,7 @@ export async function closeNotifications(): Promise<void> {
  * アイコンのドットが消えてしまう。Badging API非対応環境ではドットの根拠が通知しかないので、
  * 残件がある間は無音の通知を出し直してドットを保つ。
  */
-export async function ensureBadgeNotification(): Promise<void> {
+async function ensureBadgeNotification(): Promise<void> {
 	if (!('serviceWorker' in navigator)) return;
 	if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 	try {

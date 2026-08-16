@@ -105,7 +105,8 @@ import Layout from "../layouts/Layout.astro";
     margin-top: 1rem;
     min-width: 190px;
   }
-  .btn-outline:disabled,
+  /* ホーム画面(アプリ)未インストール時は「はじめる」を押せなくする。
+     :disabled は Layout.astro のグローバル定義が担当する */
   .btn-outline[aria-disabled="true"] {
     opacity: 0.5;
     pointer-events: none;
