@@ -5,10 +5,10 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ locals }) => {
   const { results } = await env.DB.prepare(
-    `SELECT target_date, sent_at FROM schedules WHERE user_id = ? AND sent_at IS NULL ORDER BY target_date ASC`,
+    `SELECT target_date FROM schedules WHERE user_id = ? AND sent_at IS NULL ORDER BY target_date ASC`,
   )
     .bind(locals.userId)
-    .all<{ target_date: string; sent_at: string | null }>();
+    .all<{ target_date: string }>();
 
   return new Response(JSON.stringify({ schedules: results }), {
     headers: { 'content-type': 'application/json' },

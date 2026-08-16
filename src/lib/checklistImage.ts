@@ -38,7 +38,6 @@ type BodyItem =
       lines: string[];
       checked: boolean;
       disabled: boolean;
-      final: boolean;
     };
 
 type Block =
@@ -63,7 +62,6 @@ type Item =
       y: number;
       checked: boolean;
       disabled: boolean;
-      final: boolean;
     }
   | { t: "line"; y1: number; y2: number }
   | { t: "cloud"; x: number; y: number; w: number; h: number };
@@ -120,7 +118,6 @@ function readBlocks(timeline: HTMLElement): Block[] {
         lines: spanLines(span),
         checked: input.checked,
         disabled: input.disabled,
-        final: label.classList.contains("final"),
       });
     }
     blocks.push({ kind: "step", month, body });
@@ -327,7 +324,6 @@ function layout(
         y: y + 5,
         checked: item.checked,
         disabled: item.disabled,
-        final: item.final,
       });
 
       ctx.font = font(700, 20);
@@ -339,7 +335,7 @@ function layout(
           x: TEXT_X,
           y,
           text: line,
-          font: font(item.final ? 900 : 700, 20),
+          font: font(700, 20),
           color,
         });
         y += 26;
@@ -452,14 +448,10 @@ function draw(
         break;
       }
       case "check": {
-        ctx.fillStyle = item.disabled
-          ? COLOR.disabled
-          : item.final
-            ? COLOR.accent
-            : COLOR.white;
+        ctx.fillStyle = item.disabled ? COLOR.disabled : COLOR.white;
         ctx.fillRect(item.x, item.y, BOX, BOX);
         if (!item.checked) break;
-        ctx.strokeStyle = item.final ? COLOR.white : COLOR.accent;
+        ctx.strokeStyle = COLOR.accent;
         ctx.lineWidth = 2.5;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
