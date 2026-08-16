@@ -420,11 +420,14 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     saveBadgeSnapshot,
     applyBadge,
     pendingBadgeCount,
+    countNotifications,
+    keepBadgeNotificationIfNeeded,
+    readBadgeSwLog,
     todayYmJst,
     type BadgeSection,
   } from "../../lib/badge";
   import { downloadChecklistImage } from "../../lib/checklistImage";
-  import { isStandalone } from "../../lib/platform";
+  import { isAndroid, isStandalone } from "../../lib/platform";
 
   const settings = loadSettings();
   if (!settings) {
@@ -440,8 +443,13 @@ import PensionCopyPop from "./PensionCopyPop.astro";
   setText("prepare-year", plan.prepare.year);
   setText("prepare-month", plan.prepare.month);
   setText("start-month2", plan.start.month);
-  setText("receive-year", plan.receive.year);
   setText("receive-month", plan.receive.month);
+
+  // 受け取りの年は、年をまたぐときだけ表示する
+  const receiveYearEl = document.getElementById("receive-year")!;
+  const crossesYear = plan.receive.year !== plan.start.year;
+  receiveYearEl.textContent = crossesYear ? String(plan.receive.year) : "";
+  receiveYearEl.classList.toggle("hidden", !crossesYear);
 
   // チェックリスト(ローカル保存のみ)
   const checks = loadChecks();
@@ -493,6 +501,9 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     localStorage.getItem(DEBUG_KEY) === "1" ||
     new URLSearchParams(location.search).has("debug");
 
+  // 直近の未チェック件数(アプリを離れるときの通知の貼り直し判定に使う)
+  let lastCount = 0;
+
   async function syncBadge() {
     const sections: BadgeSection[] = [];
     for (const step of document.querySelectorAll<HTMLElement>(
@@ -511,32 +522,48 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     await saveBadgeSnapshot(sections);
     const todayYm = todayYmJst();
     const count = pendingBadgeCount(sections, todayYm);
-    const result = await applyBadge(count);
+    lastCount = count;
+    // 対象月がまだ来ていない間は、届いている通知を消さない
+    const arrived = sections.some((s) => s.ym <= todayYm);
+    const result = await applyBadge(count, { closeWhenEmpty: arrived });
 
-    // バッジを反映できなかった理由を、ホーム画面から開いている場合に案内する
-    const showNote = result !== "ok" && isStandalone();
+    // バッジを反映できなかった理由を、ホーム画面から開いている場合に案内する。
+    // ただしAndroidはBadging API非対応(常にunsupported)で、代わりに未読通知があれば
+    // OSがアイコンにドットを出すため、案内は不要
+    const showNote =
+      result !== "ok" &&
+      isStandalone() &&
+      !(result === "unsupported" && isAndroid());
     badgeNoteEl.classList.toggle("hidden", !showNote);
     badgePermissionBtn.classList.toggle("hidden", result !== "denied");
     if (showNote) badgeNoteTextEl.textContent = NOTE_TEXT[result];
 
-    renderDebug({ result, count, todayYm, sections });
+    await renderDebug({ result, count, todayYm, sections, arrived });
   }
 
-  function renderDebug(info: {
+  async function renderDebug(info: {
     result: string;
     count: number;
     todayYm: string;
     sections: BadgeSection[];
+    arrived: boolean;
   }) {
     badgeDebugEl.classList.toggle("hidden", !debugOn);
     if (!debugOn) return;
+    const notifications = await countNotifications();
+    const swLog = await readBadgeSwLog();
     badgeDebugEl.textContent = [
       `standalone: ${isStandalone()}`,
       `Notification.permission: ${typeof Notification === "undefined" ? "なし" : Notification.permission}`,
       `setAppBadge: ${typeof navigator.setAppBadge}`,
       `serviceWorker: ${"serviceWorker" in navigator}`,
       `today(JST): ${info.todayYm}`,
-      `badge: ${info.result} / count=${info.count}`,
+      // count は「対象月が到来したステップ」の未チェック数。arrived=false なら常に0になる
+      `badge: ${info.result} / count=${info.count} / arrived=${info.arrived}`,
+      // Androidのドットは未読通知の有無で決まるので、残っている通知数も出す
+      `notifications: ${notifications}`,
+      // 通知タップ時にSWが貼り直しをどう判定したか
+      `sw: ${swLog ? JSON.stringify(swLog) : "なし"}`,
       `sections: ${info.sections.map((s) => `${s.ym}:${s.remaining}`).join(", ")}`,
       `UA: ${navigator.userAgent}`,
     ].join("\n");
@@ -568,9 +595,17 @@ import PensionCopyPop from "./PensionCopyPop.astro";
 
   runSyncBadge();
 
-  // 月をまたいだ後にアプリへ復帰した場合も判定し直す
+  // 月をまたいだ後にアプリへ復帰した場合も判定し直す。
+  // 逆にアプリを離れるときは、未チェックが残っていれば通知を貼り直してドットを維持する
+  // (Androidは通知タップで通知が消えるため、そのままだとドットも消えてしまう)
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") runSyncBadge();
+    if (document.visibilityState === "visible") {
+      runSyncBadge();
+      return;
+    }
+    keepBadgeNotificationIfNeeded(lastCount).catch((err) =>
+      console.error("keepBadgeNotification error:", err),
+    );
   });
   window.addEventListener("pageshow", (e) => {
     if (e.persisted) runSyncBadge();

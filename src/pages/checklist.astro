@@ -48,8 +48,17 @@ import Checklist from "../features/checklist/Checklist.astro";
         class="btn-outline hidden"
         id="checklist-install-btn"
       >
-        ホーム画面に追加
+        アプリとしてインストール
       </button>
+      <section id="checklist-install-guide" class="hidden install-note">
+        <p>
+          Chromeの右上メニュー（⋮） →
+          「アプリをインストール」または「ホーム画面に追加」を選択してください。
+        </p>
+      </section>
+      <a class="btn-outline hidden" id="checklist-open-chrome-btn" href="#">
+        Chromeで開く
+      </a>
     </aside>
 
     <Checklist />
@@ -119,8 +128,21 @@ import Checklist from "../features/checklist/Checklist.astro";
     word-break: break-all;
   }
 
-  #checklist-install-btn {
+  #checklist-install-btn,
+  #checklist-open-chrome-btn {
     align-self: flex-start;
+  }
+  .install-note {
+    align-self: flex-start;
+    width: 100%;
+    background: var(--color-white);
+    border-radius: 3px;
+    padding: 0.9rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .install-note p {
+    margin: 0;
   }
   .hidden {
     display: none !important;
@@ -139,37 +161,69 @@ import Checklist from "../features/checklist/Checklist.astro";
     }
     .toggle-link,
     .tips,
-    #checklist-install-btn {
+    #checklist-install-btn,
+    #checklist-open-chrome-btn,
+    .install-note {
       display: none;
     }
   }
 </style>
 
 <script>
-  import { isAndroid, isStandalone } from "../lib/platform";
+  import {
+    isAndroid,
+    isStandalone,
+    isAndroidChrome,
+    chromeIntentUrl,
+  } from "../lib/platform";
 
   const installBtn = document.getElementById(
     "checklist-install-btn",
   ) as HTMLButtonElement;
+  const openChromeBtn = document.getElementById(
+    "checklist-open-chrome-btn",
+  ) as HTMLAnchorElement;
+  const installGuideEl = document.getElementById("checklist-install-guide")!;
 
   // Androidでホーム画面経由(standalone)以外で開いた場合のみ表示
   const needsInstallButton = isAndroid() && !isStandalone();
 
   let deferredInstallPrompt: any = null;
 
-  if (needsInstallButton) {
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      installBtn.classList.remove("hidden");
-    });
+  // beforeinstallpromptを取り逃さないよう、判定より先に登録しておく
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    installGuideEl.classList.add("hidden");
+  });
 
-    installBtn.addEventListener("click", async () => {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      installBtn.classList.add("hidden");
-    });
+  if (needsInstallButton) {
+    // Chrome以外のブラウザからホーム画面に追加してもPWAが正しく動作しないため、
+    // インストール導線は出さずChromeで開き直してもらう
+    if (await isAndroidChrome()) {
+      // 設定後からでもインストールできるよう、beforeinstallpromptの有無に関わらず表示する
+      // (プロンプトが取得できない場合は手動手順を案内する)
+      installBtn.classList.remove("hidden");
+
+      installBtn.addEventListener("click", async () => {
+        if (!deferredInstallPrompt) {
+          installGuideEl.classList.remove("hidden");
+          return;
+        }
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        installBtn.classList.add("hidden");
+      });
+
+      // インストール完了後はボタンを消す
+      window.addEventListener("appinstalled", () => {
+        installBtn.classList.add("hidden");
+        installGuideEl.classList.add("hidden");
+      });
+    } else {
+      openChromeBtn.href = chromeIntentUrl();
+      openChromeBtn.classList.remove("hidden");
+    }
   }
 </script>

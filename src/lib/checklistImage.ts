@@ -411,13 +411,22 @@ function draw(
       }
       case "pill": {
         ctx.font = font(900, 14);
-        const w = ctx.measureText(item.text).width + 20;
+        // textBaseline:"top"の基準位置はiOS Safariとその他で異なり、年のテキストが下寄りになる。
+        // 字形の実測値(ink box)で中央に揃えることでブラウザ差をなくす。
+        // measureTextのactualBoundingBoxは現在のtextBaselineが基準なので、計測前に切り替える。
+        ctx.textBaseline = "alphabetic";
+        const m = ctx.measureText(item.text);
+        const w = m.width + 20;
+        const h = 22;
         ctx.fillStyle = COLOR.white;
-        roundedRect(ctx, item.x, item.y, w, 22, 10);
+        roundedRect(ctx, item.x, item.y, w, h, 10);
         ctx.fill();
         ctx.fillStyle = COLOR.primary;
         ctx.textAlign = "left";
-        ctx.fillText(item.text, item.x + 10, item.y + 4);
+        const ascent = m.actualBoundingBoxAscent || 10;
+        const descent = m.actualBoundingBoxDescent || 0;
+        ctx.fillText(item.text, item.x + 10, item.y + (h + ascent - descent) / 2);
+        ctx.textBaseline = "top";
         break;
       }
       case "circle": {

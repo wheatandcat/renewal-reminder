@@ -22,6 +22,23 @@ import Layout from "../layouts/Layout.astro";
       </p>
     </section>
 
+    <section id="android-home-note" class="hidden ios-note">
+      <p>
+        AndroidでPush通知を受け取るには、アプリとしてインストールしてご利用ください。
+      </p>
+    </section>
+
+    <section id="chrome-note" class="hidden ios-note">
+      <p>
+        Androidでは Chrome
+        以外のブラウザからホーム画面に追加すると、通知が正しく動作しません。<br />
+        下のボタンからChromeで開き直してご利用ください。
+      </p>
+    </section>
+    <a class="btn-outline hidden" id="open-chrome-btn" href="#">
+      Chromeで開く
+    </a>
+
     <button type="button" class="btn-outline hidden" id="install-btn">
       ホーム画面に追加
     </button>
@@ -29,6 +46,17 @@ import Layout from "../layouts/Layout.astro";
       <p>
         Safariの共有ボタン →
         「ホーム画面に追加」を選択後、ホーム画面のアイコンから開き直してください。
+      </p>
+    </section>
+    <section id="android-install-guide" class="hidden ios-note">
+      <p>
+        Chromeの右上メニュー（⋮） →
+        「アプリをインストール」または「ホーム画面に追加」を選択してください。
+      </p>
+    </section>
+    <section id="installed-note" class="hidden ios-note">
+      <p>
+        インストールが完了したら、ホーム画面に追加されたアイコンから開き直してください。
       </p>
     </section>
 
@@ -97,29 +125,46 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   import { loadSettings } from "../lib/store";
-  import { isAndroid, isIos, isStandalone } from "../lib/platform";
+  import {
+    isAndroid,
+    isIos,
+    isStandalone,
+    isAndroidChrome,
+    chromeIntentUrl,
+  } from "../lib/platform";
 
   const ios = isIos();
+  const android = isAndroid();
   const standalone = isStandalone();
 
   const startBtn = document.getElementById("start-btn") as HTMLAnchorElement;
   const iosHomeNoteEl = document.getElementById("ios-home-note")!;
+  const androidHomeNoteEl = document.getElementById("android-home-note")!;
   const installBtn = document.getElementById(
     "install-btn",
   ) as HTMLButtonElement;
   const installGuideEl = document.getElementById("install-guide")!;
+  const androidInstallGuideEl = document.getElementById(
+    "android-install-guide",
+  )!;
+  const installedNoteEl = document.getElementById("installed-note")!;
+  const chromeNoteEl = document.getElementById("chrome-note")!;
+  const openChromeBtn = document.getElementById(
+    "open-chrome-btn",
+  ) as HTMLAnchorElement;
 
-  // iOSはホーム画面に追加(standalone)しないとWeb Pushを受け取れない
-  const iosNeedsHomeScreen = ios && !standalone;
-  if (iosNeedsHomeScreen) {
-    iosHomeNoteEl.classList.remove("hidden");
+  // iOS/Androidともホーム画面(アプリ)から起動しないとWeb Pushを受け取れないため、
+  // ブラウザ表示のままでは設定に進めないようにする。
+  // (ブラウザで設定してしまうと、後からインストールしても設定を引き継げないケースがあるため)
+  const needsHomeScreen = (ios || android) && !standalone;
+  if (needsHomeScreen) {
     startBtn.setAttribute("aria-disabled", "true");
   } else if (loadSettings()) {
     location.href = "/checklist";
   }
 
   startBtn.addEventListener("click", (e) => {
-    if (iosNeedsHomeScreen) {
+    if (needsHomeScreen) {
       e.preventDefault();
       return;
     }
@@ -129,16 +174,27 @@ import Layout from "../layouts/Layout.astro";
     }
   });
 
-  // ホーム画面追加ボタン: Android/iOSのブラウザ表示時のみ表示
   let deferredInstallPrompt: any = null;
-  if ((isAndroid() || ios) && !standalone) {
-    installBtn.classList.remove("hidden");
-  }
-
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
   });
+
+  if (needsHomeScreen) {
+    if (!android) {
+      iosHomeNoteEl.classList.remove("hidden");
+      installBtn.classList.remove("hidden");
+    } else if (await isAndroidChrome()) {
+      androidHomeNoteEl.classList.remove("hidden");
+      installBtn.textContent = "アプリとしてインストール";
+      installBtn.classList.remove("hidden");
+    } else {
+      // AndroidはChrome以外だとインストールしてもPWAが正しく動作しないためChromeへ誘導する
+      chromeNoteEl.classList.remove("hidden");
+      openChromeBtn.href = chromeIntentUrl();
+      openChromeBtn.classList.remove("hidden");
+    }
+  }
 
   installBtn.addEventListener("click", async () => {
     if (deferredInstallPrompt) {
@@ -147,8 +203,18 @@ import Layout from "../layouts/Layout.astro";
       deferredInstallPrompt = null;
       return;
     }
-    if (ios) {
-      installGuideEl.classList.remove("hidden");
-    }
+    // プロンプトが使えない場合は手動の手順を案内する
+    (android ? androidInstallGuideEl : installGuideEl).classList.remove(
+      "hidden",
+    );
+  });
+
+  // Androidはインストール完了後もブラウザ側に留まる(アプリへ自動遷移はできない)ため、
+  // アイコンから開き直すよう案内する
+  window.addEventListener("appinstalled", () => {
+    installBtn.classList.add("hidden");
+    androidInstallGuideEl.classList.add("hidden");
+    installGuideEl.classList.add("hidden");
+    installedNoteEl.classList.remove("hidden");
   });
 </script>
