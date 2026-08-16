@@ -337,34 +337,57 @@ import PensionCopyPop from "./PensionCopyPop.astro";
       print-color-adjust: exact;
     }
     .year-pill {
+      left: -3rem;
       color: var(--color-text);
-      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
     }
     .step {
       break-inside: avoid;
     }
 
-    /* 1ページに収まるよう余白と文字サイズを詰める */
+    /* 1ページに収まるよう余白と文字サイズを詰める。
+       iOSは行の高さや余白の丸めがPCと僅かに異なり、ぎりぎりだと2ページ目に
+       あふれるため、A4の高さに対して2割ほど余裕を持たせたサイズにしている */
+    .timeline {
+      padding-left: 3rem;
+    }
+    .timeline::before {
+      left: 20px;
+    }
     .step {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.15rem;
     }
     .step-body h2 {
-      margin-bottom: 0.5rem;
-      font-size: 1.15rem;
+      margin-bottom: 0.45rem;
+      font-size: 1.05rem;
     }
     .step-body h2:not(:first-child) {
-      margin-top: 1.2rem;
+      margin-top: 1.05rem;
+    }
+    .marker {
+      left: -3rem;
+      top: -3px;
+      width: 42px;
+      height: 42px;
+    }
+    .marker .num {
+      font-size: 1.2rem;
+    }
+    .marker .unit {
+      font-size: 0.7rem;
     }
     .check {
-      margin-bottom: 0.6rem;
-      gap: 0.6rem;
-      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+      font-size: 1rem;
+      line-height: 1.25;
     }
     .check input {
       margin-top: 2px;
     }
     .wait-note {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
     .check input {
