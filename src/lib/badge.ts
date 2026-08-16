@@ -130,8 +130,8 @@ export function pendingBadgeCount(sections: BadgeSection[], todayYm: string): nu
 /**
  * このアプリが出した通知をすべて閉じる。
  *
- * AndroidはBadging API非対応で、代わりに「未読の通知が残っているか」でOSがアイコンに
- * ドットを付ける。そのため未チェックが0になったら通知を閉じないとドットが残り続ける。
+ * Androidは setAppBadge() を呼んでもランチャーに描画されず、「未読の通知が残っているか」で
+ * OSがアイコンにドットを付ける。そのため未チェックが0になったら通知を閉じないとドットが残り続ける。
  */
 async function closeNotifications(): Promise<void> {
 	if (!('serviceWorker' in navigator)) return;
@@ -150,7 +150,7 @@ async function closeNotifications(): Promise<void> {
  * ドット維持用の通知が残っていなければ貼り直す。
  *
  * Androidは通知をタップするとその通知が閉じられるため、未チェックが残っていても
- * アイコンのドットが消えてしまう。Badging API非対応環境ではドットの根拠が通知しかないので、
+ * アイコンのドットが消えてしまう。Androidはドットの根拠が通知しかないので、
  * 残件がある間は無音の通知を出し直してドットを保つ。
  */
 async function ensureBadgeNotification(): Promise<void> {

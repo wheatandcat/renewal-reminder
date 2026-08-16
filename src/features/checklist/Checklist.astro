@@ -533,8 +533,8 @@ import PensionCopyPop from "./PensionCopyPop.astro";
     const result = await applyBadge(count, { closeWhenEmpty: arrived });
 
     // バッジを反映できなかった理由を、ホーム画面から開いている場合に案内する。
-    // ただしAndroidはBadging API非対応(常にunsupported)で、代わりに未読通知があれば
-    // OSがアイコンにドットを出すため、案内は不要
+    // ただしAndroidのドットは未読通知から出るため、Badging APIが使えないこと(unsupported)は
+    // 問題にならず案内しない。通知が未許可(denied)の場合はドットも出せないので案内する。
     const showNote =
       result !== "ok" &&
       isStandalone() &&
