@@ -10,19 +10,17 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "generate-types": "wrangler types",
-    "postinstall": "patch-package"
+    "generate-types": "wrangler types"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.2.1",
-    "@mmmike/web-push": "^0.1.0",
+    "@mmmike/web-push": "^1.3.0",
     "astro": "^7.2.2",
     "wrangler": "^4.107.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@types/node": "^26.1.0",
-    "patch-package": "^8.0.1",
     "prettier": "^3.9.5",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "^6.0.3"
