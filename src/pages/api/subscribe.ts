@@ -43,3 +43,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   return new Response(JSON.stringify({ ok: true }));
 };
+
+export const DELETE: APIRoute = async ({ locals }) => {
+  const userId = locals.userId;
+
+  // user_id はブラウザ単位なので endpoint が変わって残った古い行も消す。
+  // 片方だけ残ると cron のJOINが空振りし、送信済みにならない予約が残り続ける
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM subscriptions WHERE user_id = ?').bind(userId),
+    env.DB.prepare('DELETE FROM schedules WHERE user_id = ? AND sent_at IS NULL').bind(userId),
+  ]);
+
+  return new Response(JSON.stringify({ ok: true }));
+};
