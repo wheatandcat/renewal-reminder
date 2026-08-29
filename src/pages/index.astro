@@ -3,6 +3,27 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
+  <script is:inline>
+    (function () {
+      try {
+        var ua = navigator.userAgent;
+        var mobile =
+          /iphone|ipad|ipod|android/i.test(ua) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        var standalone =
+          window.matchMedia("(display-mode: standalone)").matches ||
+          navigator.standalone === true;
+        // ブラウザ表示のiOS/Androidは設定に進ませない(=リダイレクトもしない)ため除外する
+        if ((!mobile || standalone) && localStorage.getItem("rr:settings")) {
+          document.documentElement.classList.add("redirecting");
+          location.replace("/checklist");
+        }
+      } catch (e) {
+        /* localStorageが使えない場合は通常表示 */
+      }
+    })();
+  </script>
+
   <main>
     <h1>精神障害者手帳 更新リマインダー</h1>
     <p class="intro">
@@ -17,9 +38,7 @@ import Layout from "../layouts/Layout.astro";
     <img src="/images/welcome-animals.png" alt="" width="359" height="282" />
 
     <section id="ios-home-note" class="hidden ios-note">
-      <p>
-        iOSでPush通知を受け取るには、ホーム画面に追加してご利用ください。
-      </p>
+      <p>iOSでPush通知を受け取るには、ホーム画面に追加してご利用ください。</p>
     </section>
 
     <section id="android-home-note" class="hidden ios-note">
@@ -31,7 +50,8 @@ import Layout from "../layouts/Layout.astro";
     <section id="chrome-note" class="hidden ios-note">
       <p>
         Androidでは Chrome
-        以外のブラウザからホーム画面に追加すると、通知が正しく動作しません。<br />
+        以外のブラウザからホーム画面に追加すると、通知が正しく動作しません。<br
+        />
         下のボタンからChromeで開き直してご利用ください。
       </p>
     </section>
@@ -67,6 +87,10 @@ import Layout from "../layouts/Layout.astro";
 <style>
   .hidden {
     display: none !important;
+  }
+  /* /checklist へ遷移するまでの間、初期画面を描画しない */
+  html.redirecting main {
+    display: none;
   }
   main {
     max-width: 640px;
@@ -161,7 +185,8 @@ import Layout from "../layouts/Layout.astro";
   if (needsHomeScreen) {
     startBtn.setAttribute("aria-disabled", "true");
   } else if (loadSettings()) {
-    location.href = "/checklist";
+    // 上のインラインスクリプトで遷移済みだが、念のためのフォールバック
+    location.replace("/checklist");
   }
 
   startBtn.addEventListener("click", (e) => {
