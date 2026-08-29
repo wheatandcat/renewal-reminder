@@ -40,7 +40,6 @@ type BadgeSnapshot = {
 /** SW側(public/sw.js)が書き残す判定ログ。実機での診断用 */
 export type BadgeSwLog = {
 	at?: string;
-	force?: boolean;
 	swBadgeApi?: string;
 	badgeApi?: boolean | null;
 	keepAlive?: boolean;
@@ -147,11 +146,16 @@ async function closeNotifications(): Promise<void> {
 }
 
 /**
- * ドット維持用の通知が残っていなければ貼り直す。
+ * ドット維持用の通知を貼り直す。
  *
  * Androidは通知をタップするとその通知が閉じられるため、未チェックが残っていても
  * アイコンのドットが消えてしまう。Androidはドットの根拠が通知しかないので、
- * 残件がある間は無音の通知を出し直してドットを保つ。
+ * 残件がある間は通知を出し直してドットを保つ。
+ *
+ * 「既に通知が残っていればスキップ」はしない。getNotifications() が見ているのは
+ * Chrome内部のDBで、端末の再起動やChromeのプロセスキルでステータスバーから通知が
+ * 消えてもDBには残るため(closeイベントが飛ばない)、スキップするとドットが二度と
+ * 復活しなくなる。同じtagなら置き換えになり積み重ならないので、常に出し直す。
  */
 async function ensureBadgeNotification(): Promise<void> {
 	if (!('serviceWorker' in navigator)) return;
@@ -159,18 +163,15 @@ async function ensureBadgeNotification(): Promise<void> {
 	try {
 		const registration = await navigator.serviceWorker.getRegistration();
 		if (!registration) return;
-		// 既に通知が残っていれば何もしない(貼り直すとトレイでの並び順が変わるため)
-		const existing = await registration.getNotifications({ tag: NOTIFICATION_TAG });
-		if (existing.length > 0) return;
-		// 貼り直しのたびに音やバイブが鳴るのを避けるため silent。
-		// 通知は出ている(診断表示の notifications >= 1)のにドットが出ない場合は、
-		// 端末が重要度の低い通知にドットを付けていない可能性があるので silent を外して試すこと
+		// silent の通知はAndroidで「サイレント」扱いとなり、ランチャーによってはドットが付かない。
+		// ドットを出すことが目的なので silent は付けない。
+		// renotify は既定の false のため、通知がトレイに残っている間の貼り直しは置き換えのみで
+		// 音やバイブは鳴らない(public/sw.js と揃えること)
 		await registration.showNotification(KEEP_ALIVE_TITLE, {
 			body: KEEP_ALIVE_BODY,
 			icon: '/icons/icon-192.png',
 			data: { url: '/checklist' },
 			tag: NOTIFICATION_TAG,
-			silent: true,
 		});
 	} catch (err) {
 		console.error('keep-alive notification error:', err);

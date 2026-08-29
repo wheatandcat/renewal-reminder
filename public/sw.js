@@ -121,20 +121,22 @@ async function updateBadgeFromIdb() {
 }
 
 /**
- * ドット維持用の通知が残っていなければ貼り直す。
+ * ドット維持用の通知を貼り直す。
  *
  * Androidは通知をタップすると通知が閉じられ、未チェックが残っていてもアイコンのドットが
- * 消えてしまう。ドットの根拠が通知しかないため、残件がある間は無音の通知を出し直す。
+ * 消えてしまう。ドットの根拠が通知しかないため、残件がある間は通知を出し直す。
  * (src/lib/badge.ts の ensureBadgeNotification と同じ役割)
  *
- * force: 直前に close() した通知が getNotifications() にまだ残って見えることがあるため、
- * タップ直後の貼り直しでは残存チェックを行わない(同じtagなので重複はしない)
+ * 「既に通知が残っていればスキップ」はしない。getNotifications() が見ているのは
+ * Chrome内部のDBで、端末の再起動やChromeのプロセスキルでステータスバーから通知が
+ * 消えてもDBには残るため(closeイベントが飛ばない)、スキップするとドットが二度と
+ * 復活しなくなる。同じtagなら置き換えになり積み重ならないので、常に出し直す。
  *
  * 判定結果は BADGE_DEBUG_KEY に残し、チェックリストの診断表示から実機で確認できるようにする。
  */
-async function keepBadgeNotification(force = false) {
+async function keepBadgeNotification() {
   /** @type {Record<string, unknown>} */
-  const log = { at: new Date().toISOString(), force, swBadgeApi: typeof self.navigator.setAppBadge };
+  const log = { at: new Date().toISOString(), swBadgeApi: typeof self.navigator.setAppBadge };
   try {
     const snapshot = await readBadgeSnapshot();
     log.badgeApi = snapshot?.badgeApi ?? null;
@@ -154,20 +156,15 @@ async function keepBadgeNotification(force = false) {
       log.skipped = 'count-0';
       return;
     }
-    if (!force) {
-      const existing = await self.registration.getNotifications({ tag: NOTIFICATION_TAG });
-      if (existing.length > 0) {
-        log.skipped = 'existing';
-        return;
-      }
-    }
-    // 貼り直しのたびに音やバイブが鳴るのを避けるため silent(src/lib/badge.ts と揃えること)
+    // silent の通知はAndroidで「サイレント」扱いとなり、ランチャーによってはドットが付かない。
+    // ドットを出すことが目的なので silent は付けない。
+    // renotify は既定の false のため、通知がトレイに残っている間の貼り直しは置き換えのみで
+    // 音やバイブは鳴らない(src/lib/badge.ts と揃えること)
     await self.registration.showNotification(KEEP_ALIVE_TITLE, {
       body: KEEP_ALIVE_BODY,
       icon: '/icons/icon-192.png',
       data: { url: '/checklist' },
       tag: NOTIFICATION_TAG,
-      silent: true,
     });
     log.shown = (await self.registration.getNotifications({ tag: NOTIFICATION_TAG })).length;
   } catch (err) {
@@ -206,7 +203,7 @@ self.addEventListener('notificationclick', (event) => {
         return existing ? existing.focus() : self.clients.openWindow(url);
       }),
       // タップで閉じた通知を、未チェックが残っていれば貼り直してドットを維持する
-      keepBadgeNotification(true),
+      keepBadgeNotification(),
     ]),
   );
 });
